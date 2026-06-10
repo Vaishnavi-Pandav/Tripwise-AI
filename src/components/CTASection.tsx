@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { Sparkles, ArrowRight, MessageCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const CTASection = () => {
   const ref = useRef<HTMLElement>(null);
@@ -98,28 +99,31 @@ const CTASection = () => {
               transition={{ delay: 0.5 }}
               className="flex flex-col sm:flex-row items-center justify-center gap-4"
             >
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => scrollTo("#home")}
-                id="cta-generate-btn"
-                className="btn-primary flex items-center gap-2"
-                style={{ padding: "16px 40px", fontSize: "16px" }}
-              >
-                <Sparkles size={18} />
-                <span>Generate AI Trip</span>
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.97 }}
-                id="cta-contact-btn"
-                className="btn-outline flex items-center gap-2"
-                style={{ padding: "15px 40px", fontSize: "16px" }}
-              >
-                <MessageCircle size={18} />
-                Contact Us
-                <ArrowRight size={16} />
-              </motion.button>
+              <Link to="/results">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.97 }}
+                  id="cta-generate-btn"
+                  className="btn-primary flex items-center gap-2"
+                  style={{ padding: "16px 40px", fontSize: "16px" }}
+                >
+                  <Sparkles size={18} />
+                  <span>Generate AI Trip</span>
+                </motion.button>
+              </Link>
+              <Link to="/contact">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.97 }}
+                  id="cta-contact-btn"
+                  className="btn-outline flex items-center gap-2"
+                  style={{ padding: "15px 40px", fontSize: "16px" }}
+                >
+                  <MessageCircle size={18} />
+                  Contact Us
+                  <ArrowRight size={16} />
+                </motion.button>
+              </Link>
             </motion.div>
 
             {/* Trust row */}
