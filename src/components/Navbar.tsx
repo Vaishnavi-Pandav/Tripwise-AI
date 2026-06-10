@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Moon, Sun, Menu, X, Plane } from "lucide-react";
+import { Moon, Sun, Menu, X, Plane, User, Heart, Settings, LogOut, History, MapPin, ChevronDown } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 interface NavbarProps {
   darkMode: boolean;
@@ -8,17 +9,25 @@ interface NavbarProps {
 }
 
 const navLinks = [
-  { label: "Home", href: "#home" },
-  { label: "Destinations", href: "#destinations" },
-  { label: "AI Planner", href: "#ai-planner" },
-  { label: "Packages", href: "#packages" },
-  { label: "Reviews", href: "#reviews" },
-  { label: "Contact", href: "#contact" },
+  { label: "Home", href: "/#home" },
+  { label: "Destinations", href: "/#destinations" },
+  { label: "AI Planner", href: "/#ai-planner" },
+  { label: "Packages", href: "/#packages" },
+  { label: "Reviews", href: "/#reviews" },
+  { label: "Contact", href: "/#contact" },
 ];
 
 const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  
+  // Mock Auth State
+  // Toggle this to true to see the logged-in state
+  const [isLoggedIn, setIsLoggedIn] = useState(false); 
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -26,10 +35,29 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const scrollTo = (href: string) => {
     setMenuOpen(false);
-    const el = document.querySelector(href);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (href.startsWith('/#')) {
+      // If we are not on home page, go to home page first
+      if (window.location.pathname !== '/') {
+        navigate(href);
+      } else {
+        const id = href.replace('/#', '#');
+        const el = document.querySelector(id);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
   };
 
   return (
@@ -51,7 +79,7 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
             <motion.div
               whileHover={{ scale: 1.03 }}
               className="flex items-center gap-3 cursor-pointer"
-              onClick={() => scrollTo("#home")}
+              onClick={() => { navigate('/'); setTimeout(() => window.scrollTo({top: 0, behavior: 'smooth'}), 100) }}
             >
               <div className="relative">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center"
@@ -71,12 +99,12 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
             </motion.div>
 
             {/* Desktop Nav */}
-            <div className="hidden lg:flex items-center gap-8 nav-links-desktop" style={{ display: "flex" }}>
+            <div className="hidden lg:flex items-center gap-8 nav-links-desktop">
               {navLinks.map((link) => (
                 <button
                   key={link.href}
                   onClick={() => scrollTo(link.href)}
-                  className="nav-link bg-transparent border-none"
+                  className="nav-link bg-transparent border-none text-white hover:text-emerald-400 transition-colors font-medium text-sm"
                 >
                   {link.label}
                 </button>
@@ -90,7 +118,7 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setDarkMode(!darkMode)}
-                className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border"
+                className="hidden sm:flex w-10 h-10 rounded-full items-center justify-center transition-all duration-300 border"
                 style={{
                   background: "rgba(255,255,255,0.06)",
                   borderColor: "rgba(255,255,255,0.12)",
@@ -104,17 +132,123 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
                 )}
               </motion.button>
 
-              {/* CTA Button */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => scrollTo("#hero-form")}
-                className="hidden lg:flex items-center gap-2 btn-primary"
-                style={{ padding: "10px 24px", fontSize: "14px" }}
-              >
-                <span>Plan My Trip</span>
-                <Plane size={15} />
-              </motion.button>
+              <div className="hidden lg:flex items-center gap-3">
+                {/* Auth State UI */}
+                {!isLoggedIn ? (
+                  <>
+                    <Link to="/login">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="px-5 py-2.5 rounded-full text-sm font-medium transition-all flex items-center justify-center"
+                        style={{
+                          background: "rgba(255, 255, 255, 0.05)",
+                          border: "1px solid rgba(255, 255, 255, 0.1)",
+                          color: "white"
+                        }}
+                      >
+                        Log In
+                      </motion.button>
+                    </Link>
+                    <Link to="/signup">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="px-5 py-2.5 rounded-full text-sm font-medium transition-all flex items-center justify-center"
+                        style={{
+                          background: "rgba(255, 255, 255, 0.15)",
+                          border: "1px solid rgba(255, 255, 255, 0.25)",
+                          color: "white",
+                          backdropFilter: "blur(10px)"
+                        }}
+                      >
+                        Sign Up
+                      </motion.button>
+                    </Link>
+                  </>
+                ) : (
+                  <div className="relative" ref={dropdownRef}>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setDropdownOpen(!dropdownOpen)}
+                      className="flex items-center gap-2 p-1 pr-3 rounded-full border transition-all"
+                      style={{
+                        background: "rgba(255, 255, 255, 0.08)",
+                        borderColor: "rgba(255, 255, 255, 0.15)",
+                      }}
+                    >
+                      <img 
+                        src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=64&q=80" 
+                        alt="Avatar" 
+                        className="w-8 h-8 rounded-full object-cover border border-emerald-500/30"
+                      />
+                      <ChevronDown size={14} className="text-white/70" />
+                    </motion.button>
+
+                    <AnimatePresence>
+                      {dropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute right-0 mt-3 w-60 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-2xl border"
+                          style={{
+                            background: "rgba(2, 8, 23, 0.85)",
+                            borderColor: "rgba(255, 255, 255, 0.15)",
+                          }}
+                        >
+                          <div className="p-5 border-b border-white/10">
+                            <p className="text-sm font-bold text-white mb-0.5">Sarah Jenkins</p>
+                            <p className="text-xs text-white/60">sarah.jenkins@example.com</p>
+                          </div>
+                          <div className="p-2 flex flex-col gap-1">
+                            {[
+                              { icon: User, label: "My Profile", to: "/profile" },
+                              { icon: MapPin, label: "Saved Trips", to: "/profile" },
+                              { icon: History, label: "Trip History", to: "/profile" },
+                              { icon: Heart, label: "Wishlist", to: "/profile" },
+                              { icon: Settings, label: "Settings", to: "/profile" },
+                            ].map((item, idx) => (
+                              <Link 
+                                key={idx} 
+                                to={item.to}
+                                onClick={() => setDropdownOpen(false)}
+                                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                              >
+                                <item.icon size={16} className="text-emerald-400" /> {item.label}
+                              </Link>
+                            ))}
+                            <div className="h-px bg-white/10 my-2 mx-2" />
+                            <button
+                              onClick={() => {
+                                setIsLoggedIn(false);
+                                setDropdownOpen(false);
+                              }}
+                              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors text-left"
+                            >
+                              <LogOut size={16} /> Logout
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+
+                {/* Main CTA Button */}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => scrollTo("/#home")}
+                  className="flex items-center gap-2 btn-primary ml-2"
+                  style={{ padding: "10px 24px", fontSize: "14px" }}
+                >
+                  <span>Plan My Trip</span>
+                  <Plane size={15} />
+                </motion.button>
+              </div>
 
               {/* Mobile menu toggle */}
               <motion.button
@@ -124,7 +258,7 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
                 style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
                 aria-label="Toggle menu"
               >
-                {menuOpen ? <X size={18} /> : <Menu size={18} />}
+                {menuOpen ? <X size={18} className="text-white" /> : <Menu size={18} className="text-white" />}
               </motion.button>
             </div>
           </div>
@@ -139,10 +273,55 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-40 lg:hidden"
+            className="fixed inset-0 z-40 lg:hidden overflow-y-auto"
             style={{ top: "80px" }}
           >
-            <div className="glass-dark h-full p-6 flex flex-col gap-4">
+            <div className="glass-dark min-h-full p-6 flex flex-col gap-4 pb-20">
+              
+              {/* Mobile Auth UI */}
+              <div className="flex flex-col gap-3 mb-6 pb-6 border-b border-white/10">
+                {!isLoggedIn ? (
+                  <div className="flex flex-col gap-3">
+                    <Link to="/login" onClick={() => setMenuOpen(false)}>
+                      <button className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white font-medium hover:bg-white/10 transition-colors">
+                        Log In
+                      </button>
+                    </Link>
+                    <Link to="/signup" onClick={() => setMenuOpen(false)}>
+                      <button className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-sky-500 text-white font-medium hover:shadow-lg hover:shadow-emerald-500/20 transition-all">
+                        Sign Up
+                      </button>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10">
+                      <img 
+                        src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=64&q=80" 
+                        alt="Avatar" 
+                        className="w-12 h-12 rounded-full object-cover border-2 border-emerald-500/50"
+                      />
+                      <div>
+                        <p className="font-bold text-white">Sarah Jenkins</p>
+                        <p className="text-xs text-emerald-400">sarah.jenkins@example.com</p>
+                      </div>
+                    </div>
+                    <Link to="/profile" onClick={() => setMenuOpen(false)}>
+                      <button className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-medium hover:bg-white/10 transition-colors">
+                        <User size={16} /> My Profile
+                      </button>
+                    </Link>
+                    <button 
+                      onClick={() => { setIsLoggedIn(false); setMenuOpen(false); }}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-red-500/10 text-red-400 font-medium hover:bg-red-500/20 transition-colors"
+                    >
+                      <LogOut size={16} /> Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile Nav Links */}
               {navLinks.map((link, i) => (
                 <motion.button
                   key={link.href}
@@ -159,7 +338,7 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                onClick={() => scrollTo("#hero-form")}
+                onClick={() => scrollTo("/#home")}
                 className="btn-primary mt-4"
               >
                 <span>Plan My Trip ✈️</span>

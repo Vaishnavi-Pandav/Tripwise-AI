@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ChevronDown, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const HeroSection = () => {
   const ref = useRef<HTMLDivElement>(null);
@@ -91,22 +92,23 @@ const HeroSection = () => {
             </p>
 
             {/* Elegant CTA Button */}
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={scrollToDestinations}
-              className="glass-card flex items-center justify-center gap-3 text-white px-8 py-4 rounded-full font-medium tracking-widest text-xs uppercase transition-all duration-300"
-              style={{
-                background: "rgba(255, 255, 255, 0.08)",
-                border: "1px solid rgba(255, 255, 255, 0.15)",
-                boxShadow: "0 20px 40px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.05)",
-                backdropFilter: "blur(12px)",
-                fontFamily: "'Inter', sans-serif",
-              }}
-            >
-              Begin Your Journey
-              <ArrowRight size={14} strokeWidth={1.5} />
-            </motion.button>
+            <Link to="/results">
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="glass-card flex items-center justify-center gap-3 text-white px-8 py-4 rounded-full font-medium tracking-widest text-xs uppercase transition-all duration-300"
+                style={{
+                  background: "rgba(255, 255, 255, 0.08)",
+                  border: "1px solid rgba(255, 255, 255, 0.15)",
+                  boxShadow: "0 20px 40px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.05)",
+                  backdropFilter: "blur(12px)",
+                  fontFamily: "'Inter', sans-serif",
+                }}
+              >
+                Begin Your Journey
+                <ArrowRight size={14} strokeWidth={1.5} />
+              </motion.button>
+            </Link>
           </motion.div>
 
         </div>
