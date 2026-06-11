@@ -1,17 +1,13 @@
-import os
-
-from dotenv import load_dotenv
 from openai import OpenAI, OpenAIError
 
-load_dotenv()
+from app.config import settings
 
 
-class OpenAIService:
+class AIService:
     def __init__(self):
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
+        if not settings.OPENAI_API_KEY:
             raise RuntimeError("OPENAI_API_KEY is not set in the environment.")
-        self.client = OpenAI(api_key=api_key)
+        self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
     def generate_itinerary(
         self,
@@ -21,10 +17,7 @@ class OpenAIService:
         travelers: int,
         budget: float,
     ) -> str:
-        """
-        Crafts a structured travel prompt and calls gpt-4o-mini.
-        Returns a detailed markdown itinerary including a budget layout.
-        """
+        """Generate a detailed markdown itinerary via GPT-4o-mini."""
         prompt = f"""
 You are an expert travel planner. Create a detailed {days}-day travel itinerary for {travelers} traveler(s)
 travelling from {source} to {destination} with a total budget of ${budget:,.0f} USD.
@@ -44,7 +37,6 @@ For each day include:
 - 3 options across budget, mid-range, and luxury tiers with estimated nightly cost
 
 ## 💰 Budget Breakdown
-Provide an estimated breakdown as a table:
 | Category        | Estimated Cost (USD) |
 |-----------------|----------------------|
 | Flights         | $xxx                 |
@@ -58,7 +50,6 @@ Provide an estimated breakdown as a table:
 ## 💡 Travel Tips
 - 3–5 practical tips for this destination
 """
-
         try:
             response = self.client.chat.completions.create(
                 model="gpt-4o-mini",
