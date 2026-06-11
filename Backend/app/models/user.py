@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, String, Text
+from sqlalchemy import Boolean, Column, DateTime, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -16,6 +16,7 @@ class User(Base):
     email         = Column(String(255), nullable=False, unique=True, index=True)
     password_hash = Column(String(255), nullable=False)
     profile_image = Column(Text, nullable=True)
+    is_admin      = Column(Boolean, default=False, nullable=False)
     created_at    = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
     updated_at    = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 

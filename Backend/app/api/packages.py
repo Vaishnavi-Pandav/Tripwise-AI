@@ -1,43 +1,29 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
-from typing import Optional
 
-from app.database import get_db
-from app.models.package import Package
+from app.core.dependencies import get_current_user
+from app.db.session import get_db
+from app.models.user import User
+from app.schemas.package import PackageOut
+from app.services.package_service import PackageService
 
-router = APIRouter(prefix="/api/packages", tags=["Packages"])
-
-
-class PackageOut(BaseModel):
-    id: int
-    title: str
-    destination: str
-    duration_days: int
-    price: float
-    description: Optional[str]
-    highlights: Optional[str]
-    image_url: Optional[str]
-    category: Optional[str]
-
-    model_config = {"from_attributes": True}
+router = APIRouter(prefix="/packages", tags=["Packages"])
 
 
-@router.get("/", response_model=list[PackageOut])
-def list_packages(
-    category: Optional[str] = None,
-    db: Session = Depends(get_db),
-):
-    """Return all travel packages, optionally filtered by category."""
-    query = db.query(Package)
-    if category:
-        query = query.filter(Package.category.ilike(f"%{category}%"))
-    return query.all()
+@router.get("/", response_model=list[PackageOut], summary="List all travel packages")
+def list_packages(db: Session = Depends(get_db),
+                  current_user: User = Depends(get_current_user)):
+    return PackageService.get_all(db)
 
 
-@router.get("/{package_id}", response_model=PackageOut)
-def get_package(package_id: int, db: Session = Depends(get_db)):
-    pkg = db.query(Package).filter(Package.id == package_id).first()
-    if not pkg:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Package not found")
-    return pkg
+@router.get("/destination/{destination}", response_model=list[PackageOut],
+            summary="Get packages by destination")
+def packages_by_destination(destination: str, db: Session = Depends(get_db),
+                             current_user: User = Depends(get_current_user)):
+    return PackageService.get_by_destination(db, destination)
+
+
+@router.get("/{package_id}", response_model=PackageOut, summary="Get package by ID")
+def get_package(package_id: str, db: Session = Depends(get_db),
+                current_user: User = Depends(get_current_user)):
+    return PackageService.get_by_id(db, package_id)

@@ -1,29 +1,35 @@
-from fastapi import APIRouter, Query
+from typing import Optional
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Session
 
-from app.services.hotel_service import HotelService, HotelSuggestion
+from app.core.dependencies import get_current_user
+from app.db.session import get_db
+from app.models.user import User
+from app.schemas.hotel import HotelOut
+from app.services.hotel_service import HotelService
 
-router = APIRouter(prefix="/api/hotels", tags=["Hotels"])
-
-_hotel_service = HotelService()
+router = APIRouter(prefix="/hotels", tags=["Hotels"])
 
 
-@router.get("/suggestions", response_model=list[dict])
-def get_hotel_suggestions(
-    destination: str = Query(..., description="Destination city/country"),
-    total_budget: float = Query(..., description="Total trip budget in USD"),
-    days: int = Query(..., description="Number of trip days"),
+@router.get("/", response_model=list[HotelOut], summary="List hotels with optional filters")
+def list_hotels(
+    city: Optional[str] = Query(None),
+    min_rating: Optional[float] = Query(None),
+    max_price: Optional[float] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    """Return budget, mid-range, and luxury hotel suggestions for a destination."""
-    budget_per_night = _hotel_service.budget_per_night(total_budget, days)
-    suggestions: list[HotelSuggestion] = _hotel_service.get_suggestions(destination, budget_per_night)
-    return [
-        {
-            "name": s.name,
-            "tier": s.tier,
-            "price_per_night": s.price_per_night,
-            "rating": s.rating,
-            "amenities": s.amenities,
-            "notes": s.notes,
-        }
-        for s in suggestions
-    ]
+    return HotelService.get_all(db, city, min_rating, max_price)
+
+
+@router.get("/recommendations/{trip_id}", response_model=list[HotelOut],
+            summary="Get hotel recommendations for a trip")
+def get_recommendations(trip_id: str, db: Session = Depends(get_db),
+                        current_user: User = Depends(get_current_user)):
+    return HotelService.get_recommendations_for_trip(db, trip_id)
+
+
+@router.get("/{hotel_id}", response_model=HotelOut, summary="Get hotel by ID")
+def get_hotel(hotel_id: str, db: Session = Depends(get_db),
+              current_user: User = Depends(get_current_user)):
+    return HotelService.get_by_id(db, hotel_id)

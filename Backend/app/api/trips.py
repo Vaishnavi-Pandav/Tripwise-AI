@@ -1,63 +1,47 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from app.database import get_db
-from app.models.trip import Trip
-from app.schemas.trip import TripCreate, TripOut
-from app.services.ai_service import AIService
+from app.core.dependencies import get_current_user
+from app.db.session import get_db
+from app.models.user import User
+from app.schemas.trip import TripCreate, TripOut, TripUpdate
+from app.services.trip_service import TripService
 
-router = APIRouter(prefix="/api/trips", tags=["Trips"])
-
-_ai_service = AIService()
-
-
-@router.post("/", response_model=TripOut, status_code=status.HTTP_201_CREATED)
-def create_trip(payload: TripCreate, db: Session = Depends(get_db)):
-    """Save a trip and generate its AI itinerary."""
-    try:
-        itinerary = _ai_service.generate_itinerary(
-            source=payload.source,
-            destination=payload.destination,
-            days=payload.days,
-            travelers=payload.travelers,
-            budget=payload.budget,
-        )
-    except RuntimeError as e:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(e))
-
-    trip = Trip(
-        user_id=1,  # replace with current_user.id once auth is wired
-        source=payload.source,
-        destination=payload.destination,
-        days=payload.days,
-        travelers=payload.travelers,
-        budget=payload.budget,
-        itinerary=itinerary,
-    )
-    db.add(trip)
-    db.commit()
-    db.refresh(trip)
-    return trip
+router = APIRouter(prefix="/trips", tags=["Trips"])
 
 
-@router.get("/", response_model=list[TripOut])
-def list_trips(db: Session = Depends(get_db)):
-    """Return all saved trips."""
-    return db.query(Trip).all()
+@router.post("/", response_model=TripOut, status_code=status.HTTP_201_CREATED,
+             summary="Create a new trip")
+def create_trip(
+    payload: TripCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return TripService.create(db, payload, current_user)
 
 
-@router.get("/{trip_id}", response_model=TripOut)
-def get_trip(trip_id: int, db: Session = Depends(get_db)):
-    trip = db.query(Trip).filter(Trip.id == trip_id).first()
-    if not trip:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Trip not found")
-    return trip
+@router.get("/", response_model=list[TripOut], summary="List all trips for current user")
+def list_trips(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return TripService.get_all(db, current_user)
 
 
-@router.delete("/{trip_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_trip(trip_id: int, db: Session = Depends(get_db)):
-    trip = db.query(Trip).filter(Trip.id == trip_id).first()
-    if not trip:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Trip not found")
-    db.delete(trip)
-    db.commit()
+@router.get("/{trip_id}", response_model=TripOut, summary="Get a single trip")
+def get_trip(trip_id: str, db: Session = Depends(get_db),
+             current_user: User = Depends(get_current_user)):
+    return TripService.get_by_id(db, trip_id, current_user)
+
+
+@router.put("/{trip_id}", response_model=TripOut, summary="Update a trip")
+def update_trip(
+    trip_id: str,
+    payload: TripUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return TripService.update(db, trip_id, payload, current_user)
+
+
+@router.delete("/{trip_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete a trip")
+def delete_trip(trip_id: str, db: Session = Depends(get_db),
+                current_user: User = Depends(get_current_user)):
+    TripService.delete(db, trip_id, current_user)

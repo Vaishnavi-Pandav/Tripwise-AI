@@ -1,6 +1,6 @@
 from openai import OpenAI, OpenAIError
 
-from app.config import settings
+from app.core.config import settings
 
 
 class AIService:
@@ -8,6 +8,30 @@ class AIService:
         if not settings.OPENAI_API_KEY:
             raise RuntimeError("OPENAI_API_KEY is not set in the environment.")
         self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
+    def chat(self, message: str) -> str:
+        """General-purpose AI travel assistant chat."""
+        try:
+            response = self.client.chat.completions.create(
+                model=settings.OPENAI_MODEL,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are TripWise AI, an expert travel planning assistant. "
+                            "Help users plan trips, estimate budgets, suggest destinations, "
+                            "find hidden gems, and answer all travel-related questions. "
+                            "Be concise, helpful, and friendly."
+                        ),
+                    },
+                    {"role": "user", "content": message},
+                ],
+                temperature=0.7,
+                max_tokens=1000,
+            )
+            return response.choices[0].message.content
+        except OpenAIError as e:
+            raise RuntimeError(f"OpenAI API error: {str(e)}") from e
 
     def generate_itinerary(
         self,
@@ -17,56 +41,27 @@ class AIService:
         travelers: int,
         budget: float,
     ) -> str:
-        """Generate a detailed markdown itinerary via GPT-4o-mini."""
         prompt = f"""
-You are an expert travel planner. Create a detailed {days}-day travel itinerary for {travelers} traveler(s)
-travelling from {source} to {destination} with a total budget of ${budget:,.0f} USD.
+You are an expert travel planner. Create a detailed {days}-day itinerary for {travelers} traveler(s)
+from {source} to {destination} with a total budget of ${budget:,.0f} USD.
 
-Format your response in **Markdown** and include the following sections:
-
+Format in **Markdown** with:
 ## ✈️ Trip Overview
-- Source, destination, duration, number of travelers, total budget
-
-## 📅 Day-by-Day Itinerary
-For each day include:
-- **Morning**, **Afternoon**, and **Evening** activities
-- Recommended restaurants for meals
-- Any tickets/bookings required
-
-## 🏨 Accommodation Suggestions
-- 3 options across budget, mid-range, and luxury tiers with estimated nightly cost
-
-## 💰 Budget Breakdown
-| Category        | Estimated Cost (USD) |
-|-----------------|----------------------|
-| Flights         | $xxx                 |
-| Accommodation   | $xxx                 |
-| Food & Dining   | $xxx                 |
-| Activities      | $xxx                 |
-| Local Transport | $xxx                 |
-| Miscellaneous   | $xxx                 |
-| **Total**       | **$xxx**             |
-
-## 💡 Travel Tips
-- 3–5 practical tips for this destination
+## 📅 Day-by-Day Itinerary (Morning / Afternoon / Evening for each day)
+## 🏨 Accommodation Suggestions (budget / mid-range / luxury with prices)
+## 💰 Budget Breakdown (as a table)
+## 💡 Travel Tips (3-5 tips)
 """
         try:
             response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model=settings.OPENAI_MODEL,
                 messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            "You are a knowledgeable and friendly travel planning assistant. "
-                            "Always respond in well-structured Markdown."
-                        ),
-                    },
+                    {"role": "system", "content": "You are a travel planning assistant. Respond in Markdown."},
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.7,
                 max_tokens=3000,
             )
             return response.choices[0].message.content
-
         except OpenAIError as e:
             raise RuntimeError(f"OpenAI API error: {str(e)}") from e

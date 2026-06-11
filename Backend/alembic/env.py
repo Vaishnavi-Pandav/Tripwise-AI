@@ -3,7 +3,7 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 
 # Import all models so Alembic can detect them
-from app.database import Base
+from app.db.session import Base
 import app.models  # noqa: F401 — triggers all model registrations
 
 config = context.config
