@@ -5,7 +5,7 @@ from sqlalchemy import CheckConstraint, Column, DateTime, Integer, Numeric, Stri
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 
-from app.database import Base
+from app.db.session import Base
 
 
 class TravelPackage(Base):

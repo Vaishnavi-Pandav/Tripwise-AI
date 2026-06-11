@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy import Column, Date, DateTime, Numeric, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 
-from app.database import Base
+from app.db.session import Base
 
 
 class WeatherDataCache(Base):

@@ -4,7 +4,7 @@ from decimal import Decimal
 from sqlalchemy import CheckConstraint, Column, Numeric, String
 from sqlalchemy.dialects.postgresql import UUID
 
-from app.database import Base
+from app.db.session import Base
 
 
 class DestinationComparison(Base):
