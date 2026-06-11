@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { Sparkles, ArrowRight, MessageCircle } from "lucide-react";
+import { ArrowRight, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const CTASection = () => {
@@ -96,18 +96,6 @@ const CTASection = () => {
               transition={{ delay: 0.5 }}
               className="flex flex-col sm:flex-row items-center justify-center gap-4"
             >
-              <Link to="/results">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.97 }}
-                  id="cta-generate-btn"
-                  className="btn-primary flex items-center gap-2"
-                  style={{ padding: "16px 40px", fontSize: "16px" }}
-                >
-                  <Sparkles size={18} />
-                  <span>Generate AI Trip</span>
-                </motion.button>
-              </Link>
               <Link to="/contact">
                 <motion.button
                   whileHover={{ scale: 1.05 }}

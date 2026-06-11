@@ -3,7 +3,7 @@ import uuid
 from sqlalchemy import CheckConstraint, Column, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 
-from app.database import Base
+from app.db.session import Base
 
 
 class Attraction(Base):

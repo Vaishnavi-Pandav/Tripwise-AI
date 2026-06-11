@@ -2,8 +2,9 @@ import axios from 'axios';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+// Matches backend app/schemas/ai.py → TripGenerationRequest
 export interface TripGenerationRequest {
-  source: string;
+  source: string;           // maps to source_location in the AI endpoint prompt
   destination: string;
   days: number;
   travelers: number;
@@ -29,7 +30,7 @@ export async function generateTripPlan(
   tripData: TripGenerationRequest
 ): Promise<TripGenerationResponse> {
   const { data } = await api.post<TripGenerationResponse>(
-    '/api/trips/generate',
+    '/api/v1/ai/generate',
     tripData
   );
   return data;

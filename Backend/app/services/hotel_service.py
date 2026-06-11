@@ -1,59 +1,62 @@
-from dataclasses import dataclass, field
+from typing import Optional
+from fastapi import HTTPException, status
+from sqlalchemy.orm import Session
 
-
-@dataclass
-class HotelSuggestion:
-    name: str
-    tier: str          # "budget" | "mid-range" | "luxury"
-    price_per_night: float
-    rating: float
-    amenities: list[str] = field(default_factory=list)
-    notes: str = ""
+from app.models.hotel import Hotel
+from app.models.hotel_recommendation import HotelRecommendation
+from app.schemas.hotel import HotelCreate, HotelUpdate
 
 
 class HotelService:
-    """
-    Returns hotel suggestions based on destination and budget.
-    In production, integrate with a real hotels API (e.g. Booking.com, Amadeus).
-    """
-
-    def get_suggestions(
-        self,
-        destination: str,
-        budget_per_night: float,
-    ) -> list[HotelSuggestion]:
-        """
-        Returns three tiered hotel suggestions.
-        Placeholder logic — swap with real API data.
-        """
-        return [
-            HotelSuggestion(
-                name=f"Budget Inn {destination}",
-                tier="budget",
-                price_per_night=round(budget_per_night * 0.4, 2),
-                rating=3.5,
-                amenities=["Free WiFi", "Breakfast included"],
-                notes="Great for solo or budget travelers.",
-            ),
-            HotelSuggestion(
-                name=f"{destination} Comfort Suites",
-                tier="mid-range",
-                price_per_night=round(budget_per_night * 0.75, 2),
-                rating=4.2,
-                amenities=["Free WiFi", "Pool", "Gym", "Restaurant"],
-                notes="Best value for families and couples.",
-            ),
-            HotelSuggestion(
-                name=f"The Grand {destination}",
-                tier="luxury",
-                price_per_night=round(budget_per_night * 1.5, 2),
-                rating=4.8,
-                amenities=["Free WiFi", "Pool", "Spa", "Concierge", "Fine Dining"],
-                notes="Premium experience with full amenities.",
-            ),
-        ]
 
     @staticmethod
-    def budget_per_night(total_budget: float, days: int, accommodation_share: float = 0.28) -> float:
-        """Derives recommended nightly hotel budget from total trip budget."""
-        return round((total_budget * accommodation_share) / max(days, 1), 2)
+    def get_all(db: Session, city: Optional[str] = None, min_rating: Optional[float] = None,
+                max_price: Optional[float] = None) -> list[Hotel]:
+        q = db.query(Hotel)
+        if city:
+            q = q.filter(Hotel.city.ilike(f"%{city}%"))
+        if min_rating:
+            q = q.filter(Hotel.rating >= min_rating)
+        if max_price:
+            q = q.filter(Hotel.price_per_night <= max_price)
+        return q.all()
+
+    @staticmethod
+    def get_by_id(db: Session, hotel_id: str) -> Hotel:
+        hotel = db.query(Hotel).filter(Hotel.id == hotel_id).first()
+        if not hotel:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hotel not found")
+        return hotel
+
+    @staticmethod
+    def get_recommendations_for_trip(db: Session, trip_id: str) -> list[Hotel]:
+        recs = (
+            db.query(HotelRecommendation)
+            .filter(HotelRecommendation.trip_id == trip_id)
+            .order_by(HotelRecommendation.recommendation_score.desc())
+            .all()
+        )
+        return [r.hotel for r in recs]
+
+    @staticmethod
+    def create(db: Session, payload: HotelCreate) -> Hotel:
+        hotel = Hotel(**payload.model_dump())
+        db.add(hotel)
+        db.commit()
+        db.refresh(hotel)
+        return hotel
+
+    @staticmethod
+    def update(db: Session, hotel_id: str, payload: HotelUpdate) -> Hotel:
+        hotel = HotelService.get_by_id(db, hotel_id)
+        for field, value in payload.model_dump(exclude_unset=True).items():
+            setattr(hotel, field, value)
+        db.commit()
+        db.refresh(hotel)
+        return hotel
+
+    @staticmethod
+    def delete(db: Session, hotel_id: str) -> None:
+        hotel = HotelService.get_by_id(db, hotel_id)
+        db.delete(hotel)
+        db.commit()

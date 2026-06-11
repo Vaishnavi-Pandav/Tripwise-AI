@@ -1,6 +1,14 @@
 from pydantic import BaseModel
 
 
+class ChatRequest(BaseModel):
+    message: str
+
+
+class ChatResponse(BaseModel):
+    reply: str
+
+
 class TripGenerationRequest(BaseModel):
     source: str
     destination: str
@@ -11,16 +19,3 @@ class TripGenerationRequest(BaseModel):
 
 class ItineraryResponse(BaseModel):
     itinerary: str
-
-
-class BudgetBreakdownRequest(BaseModel):
-    destination: str
-    days: int
-    travelers: int
-    total_budget: float
-
-
-class RouteRequest(BaseModel):
-    source: str
-    destination: str
-    days: int
