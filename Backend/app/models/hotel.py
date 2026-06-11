@@ -1,5 +1,9 @@
+import uuid
 from datetime import datetime
-from sqlalchemy import Column, DateTime, Float, Integer, String, Text
+
+from sqlalchemy import CheckConstraint, Column, DateTime, Numeric, String, Text
+from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.orm import relationship
 
 from app.database import Base
 
@@ -7,12 +11,21 @@ from app.database import Base
 class Hotel(Base):
     __tablename__ = "hotels"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), nullable=False)
-    location = Column(String(255), nullable=False)
-    price_per_night = Column(Float, nullable=False)
-    rating = Column(Float, nullable=True)
-    amenities = Column(Text, nullable=True)       # JSON string of amenities list
-    image_url = Column(String(500), nullable=True)
-    tier = Column(String(50), nullable=True)      # "budget" | "mid-range" | "luxury"
-    created_at = Column(DateTime, default=datetime.utcnow)
+    id              = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    city            = Column(String(150), nullable=False, index=True)
+    hotel_name      = Column(String(255), nullable=False)
+    description     = Column(Text, nullable=True)
+    price_per_night = Column(Numeric(10, 2), nullable=False)
+    rating          = Column(Numeric(3, 1), nullable=True)
+    address         = Column(Text, nullable=True)
+    image_url       = Column(Text, nullable=True)
+    amenities       = Column(JSONB, nullable=True)   # ["WiFi", "Pool", "Spa"]
+    created_at      = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        CheckConstraint("rating >= 0 AND rating <= 5", name="ck_hotels_rating_range"),
+    )
+
+    # Relationships
+    recommendations = relationship("HotelRecommendation", back_populates="hotel", cascade="all, delete-orphan")
+    reviews         = relationship("Review",               back_populates="hotel")

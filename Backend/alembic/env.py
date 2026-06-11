@@ -2,9 +2,9 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
 
-# Import your models so Alembic can detect them
+# Import all models so Alembic can detect them
 from app.database import Base
-from app.models import user, trip, hotel, package  # noqa: F401
+import app.models  # noqa: F401 — triggers all model registrations
 
 config = context.config
 
