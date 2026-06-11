@@ -24,11 +24,11 @@ class Trip(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
+    source = Column(String(255), nullable=False)
     destination = Column(String(255), nullable=False)
-    duration_days = Column(Integer, nullable=False)
-    budget = Column(String(100), nullable=False)
-    travel_style = Column(String(100), nullable=True)   # e.g. "adventure", "relaxation"
-    num_travelers = Column(Integer, default=1)
+    days = Column(Integer, nullable=False)
+    travelers = Column(Integer, nullable=False)
+    budget = Column(Integer, nullable=False)
 
     # AI-generated itinerary stored as JSON string
     itinerary = Column(Text, nullable=True)

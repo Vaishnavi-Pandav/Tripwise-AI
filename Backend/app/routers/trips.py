@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Trip, User
 from app.routers.auth import get_current_user
-from app.schemas import TripCreate, TripOut
+from app.schemas import TripGenerationRequest, TripOut
 from app.services.openai_service import generate_itinerary
 
 router = APIRouter(prefix="/trips", tags=["Trips"])
@@ -12,26 +12,26 @@ router = APIRouter(prefix="/trips", tags=["Trips"])
 
 @router.post("/generate", response_model=TripOut, status_code=status.HTTP_201_CREATED)
 def generate_trip(
-    payload: TripCreate,
+    payload: TripGenerationRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Generate an AI itinerary and save the trip to the database."""
     itinerary_json = generate_itinerary(
+        source=payload.source,
         destination=payload.destination,
-        duration_days=payload.duration_days,
+        days=payload.days,
+        travelers=payload.travelers,
         budget=payload.budget,
-        travel_style=payload.travel_style,
-        num_travelers=payload.num_travelers,
     )
 
     trip = Trip(
         user_id=current_user.id,
+        source=payload.source,
         destination=payload.destination,
-        duration_days=payload.duration_days,
+        days=payload.days,
+        travelers=payload.travelers,
         budget=payload.budget,
-        travel_style=payload.travel_style,
-        num_travelers=payload.num_travelers,
         itinerary=itinerary_json,
     )
     db.add(trip)

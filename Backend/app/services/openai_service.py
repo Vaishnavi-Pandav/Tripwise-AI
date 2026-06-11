@@ -6,29 +6,29 @@ client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 
 def generate_itinerary(
+    source: str,
     destination: str,
-    duration_days: int,
-    budget: str,
-    travel_style: str | None,
-    num_travelers: int,
+    days: int,
+    travelers: int,
+    budget: float,
 ) -> str:
     """
     Calls OpenAI to generate a day-by-day travel itinerary.
-    Returns the raw text/JSON string from the model.
+    Returns a JSON string from the model.
     """
-    style_note = f"Travel style: {travel_style}." if travel_style else ""
-
     prompt = f"""
-You are an expert travel planner. Create a detailed {duration_days}-day itinerary for {num_travelers} traveler(s) 
-visiting {destination} with a budget of {budget}. {style_note}
+You are an expert travel planner. Create a detailed {days}-day itinerary for {travelers} traveler(s)
+travelling from {source} to {destination} with a total budget of ${budget:.0f} USD.
 
 Return ONLY valid JSON in exactly this structure (no extra text):
 {{
+  "source": "{source}",
   "destination": "{destination}",
-  "duration_days": {duration_days},
-  "budget": "{budget}",
+  "days": {days},
+  "travelers": {travelers},
+  "budget": {budget},
   "summary": "<2-sentence overview>",
-  "days": [
+  "days_plan": [
     {{
       "day": 1,
       "title": "<Day title>",
@@ -55,7 +55,7 @@ Return ONLY valid JSON in exactly this structure (no extra text):
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "You are a helpful travel planning assistant."},
+            {"role": "system", "content": "You are a helpful travel planning assistant. Always respond with valid JSON only."},
             {"role": "user", "content": prompt},
         ],
         temperature=0.7,

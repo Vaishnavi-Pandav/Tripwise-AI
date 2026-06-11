@@ -41,21 +41,21 @@ class TokenData(BaseModel):
 # Trip schemas
 # ──────────────────────────────────────────────
 
-class TripCreate(BaseModel):
+class TripGenerationRequest(BaseModel):
+    source: str
     destination: str
-    duration_days: int
-    budget: str
-    travel_style: Optional[str] = None
-    num_travelers: int = 1
+    days: int
+    travelers: int
+    budget: float
 
 
 class TripOut(BaseModel):
     id: int
+    source: str
     destination: str
-    duration_days: int
-    budget: str
-    travel_style: Optional[str]
-    num_travelers: int
+    days: int
+    travelers: int
+    budget: float
     itinerary: Optional[str]
     created_at: datetime
 
