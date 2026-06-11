@@ -7,9 +7,6 @@ const CTASection = () => {
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
-  const scrollTo = (href: string) => {
-    document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
-  };
 
   return (
     <section ref={ref} id="contact" className="relative section-padding" style={{ padding: "80px 0", overflow: "hidden" }}>
