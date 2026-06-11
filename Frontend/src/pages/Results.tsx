@@ -1,215 +1,486 @@
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  MapPin, Calendar, Users, DollarSign,
+  Sparkles, ArrowRight, Plane, AlertCircle,
+} from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { motion } from 'framer-motion';
-import { Star, MapPin, Calendar, DollarSign, Filter, Search } from 'lucide-react';
+import { generateTripPlan, type TripGenerationRequest } from '../services/api';
 
-const MOCK_DESTINATIONS = [
-  {
-    id: '1',
-    name: 'Santorini, Greece',
-    image: 'https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?auto=format&fit=crop&w=800&q=80',
-    budget: '$1500 - $3000',
-    rating: 4.9,
-    season: 'May - Sep',
-    description: 'Iconic white-washed buildings, stunning sunsets, and crystal clear Aegean waters.',
-    type: 'Beach',
-  },
-  {
-    id: '2',
-    name: 'Kyoto, Japan',
-    image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80',
-    budget: '$1200 - $2500',
-    rating: 4.8,
-    season: 'Mar - May',
-    description: 'Experience traditional temples, serene gardens, and beautiful cherry blossoms.',
-    type: 'Cultural',
-  },
-  {
-    id: '3',
-    name: 'Banff, Canada',
-    image: 'https://images.unsplash.com/photo-1521404169724-699e190ebf9e?auto=format&fit=crop&w=800&q=80',
-    budget: '$1000 - $2200',
-    rating: 4.7,
-    season: 'Jun - Aug',
-    description: 'Majestic mountain peaks, turquoise glacial lakes, and abundant wildlife.',
-    type: 'Mountain',
-  },
-  {
-    id: '4',
-    name: 'Amalfi Coast, Italy',
-    image: 'https://images.unsplash.com/photo-1533676802871-eca1ae998cd5?auto=format&fit=crop&w=800&q=80',
-    budget: '$2000 - $4000',
-    rating: 4.9,
-    season: 'May - Oct',
-    description: 'Dramatic coastlines, colorful cliffside villages, and incredible Italian cuisine.',
-    type: 'Coastal',
-  },
-  {
-    id: '5',
-    name: 'Bali, Indonesia',
-    image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80',
-    budget: '$800 - $1500',
-    rating: 4.6,
-    season: 'Apr - Oct',
-    description: 'Lush rice terraces, ancient temples, and vibrant cultural retreats.',
-    type: 'Tropical',
-  },
-  {
-    id: '6',
-    name: 'Swiss Alps, Switzerland',
-    image: 'https://images.unsplash.com/photo-1531366936337-7c912a458b1c?auto=format&fit=crop&w=800&q=80',
-    budget: '$2500 - $5000',
-    rating: 4.9,
-    season: 'Dec - Mar',
-    description: 'World-class skiing, picturesque alpine villages, and breathtaking scenery.',
-    type: 'Winter',
+// ── Markdown renderer ─────────────────────────────────────────────────────────
+// Converts the markdown returned by the AI into styled JSX without extra deps.
+
+function renderMarkdown(text: string): JSX.Element {
+  const lines = text.split('\n');
+  const elements: JSX.Element[] = [];
+  let keyIdx = 0;
+  let tableBuffer: string[] = [];
+
+  const flushTable = () => {
+    if (tableBuffer.length < 2) {
+      tableBuffer = [];
+      return;
+    }
+    const [headerRow, , ...bodyRows] = tableBuffer;
+    const headers = headerRow.split('|').map(c => c.trim()).filter(Boolean);
+    const rows = bodyRows
+      .filter(r => r.trim() && !r.match(/^[\s|:-]+$/))
+      .map(r => r.split('|').map(c => c.trim()).filter(Boolean));
+
+    elements.push(
+      <div key={keyIdx++} className="overflow-x-auto my-4">
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="border-b border-white/20">
+              {headers.map((h, i) => (
+                <th key={i} className="py-2 px-3 text-left text-emerald-400 font-semibold">
+                  {h.replace(/\*\*/g, '')}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, ri) => (
+              <tr key={ri} className="border-b border-white/10 hover:bg-white/5 transition-colors">
+                {row.map((cell, ci) => (
+                  <td key={ci} className="py-2 px-3 text-white/80">
+                    {cell.replace(/\*\*/g, '')}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+    tableBuffer = [];
+  };
+
+  const inlineFormat = (str: string) => {
+    // Bold **text**
+    return str.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Table row
+    if (line.trim().startsWith('|')) {
+      tableBuffer.push(line);
+      continue;
+    } else if (tableBuffer.length > 0) {
+      flushTable();
+    }
+
+    // H2
+    if (line.startsWith('## ')) {
+      elements.push(
+        <h2
+          key={keyIdx++}
+          className="text-xl font-bold text-white mt-8 mb-3 pb-2 border-b border-white/10 flex items-center gap-2"
+          dangerouslySetInnerHTML={{ __html: inlineFormat(line.replace('## ', '')) }}
+        />
+      );
+      continue;
+    }
+
+    // H3
+    if (line.startsWith('### ')) {
+      elements.push(
+        <h3
+          key={keyIdx++}
+          className="text-base font-semibold text-emerald-400 mt-5 mb-2"
+          dangerouslySetInnerHTML={{ __html: inlineFormat(line.replace('### ', '')) }}
+        />
+      );
+      continue;
+    }
+
+    // H1
+    if (line.startsWith('# ')) {
+      elements.push(
+        <h1
+          key={keyIdx++}
+          className="text-2xl font-bold text-white mt-6 mb-4"
+          dangerouslySetInnerHTML={{ __html: inlineFormat(line.replace('# ', '')) }}
+        />
+      );
+      continue;
+    }
+
+    // Bullet
+    if (line.match(/^[-*] /)) {
+      elements.push(
+        <li
+          key={keyIdx++}
+          className="flex items-start gap-2 text-white/75 text-sm py-0.5 ml-2"
+        >
+          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+          <span dangerouslySetInnerHTML={{ __html: inlineFormat(line.replace(/^[-*] /, '')) }} />
+        </li>
+      );
+      continue;
+    }
+
+    // Numbered list
+    if (line.match(/^\d+\. /)) {
+      elements.push(
+        <li
+          key={keyIdx++}
+          className="flex items-start gap-2 text-white/75 text-sm py-0.5 ml-2"
+        >
+          <span className="text-emerald-400 font-semibold flex-shrink-0 min-w-[1.2rem]">
+            {line.match(/^(\d+)\./)?.[1]}.
+          </span>
+          <span dangerouslySetInnerHTML={{ __html: inlineFormat(line.replace(/^\d+\. /, '')) }} />
+        </li>
+      );
+      continue;
+    }
+
+    // Horizontal rule
+    if (line.match(/^---+$/)) {
+      elements.push(<hr key={keyIdx++} className="border-white/10 my-4" />);
+      continue;
+    }
+
+    // Empty line
+    if (line.trim() === '') {
+      elements.push(<div key={keyIdx++} className="h-1" />);
+      continue;
+    }
+
+    // Regular paragraph
+    elements.push(
+      <p
+        key={keyIdx++}
+        className="text-white/75 text-sm leading-relaxed"
+        dangerouslySetInnerHTML={{ __html: inlineFormat(line) }}
+      />
+    );
   }
-];
+
+  // Flush any remaining table
+  if (tableBuffer.length > 0) flushTable();
+
+  return <>{elements}</>;
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+interface FormData {
+  source: string;
+  destination: string;
+  days: string;
+  travelers: string;
+  budget: string;
+}
 
 const Results = () => {
   const [darkMode, setDarkMode] = useState(true);
+  const [form, setForm] = useState<FormData>({
+    source: '',
+    destination: '',
+    days: '',
+    travelers: '',
+    budget: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [itinerary, setItinerary] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setItinerary(null);
+    setLoading(true);
+
+    const payload: TripGenerationRequest = {
+      source: form.source.trim(),
+      destination: form.destination.trim(),
+      days: parseInt(form.days),
+      travelers: parseInt(form.travelers),
+      budget: parseFloat(form.budget),
+    };
+
+    try {
+      const result = await generateTripPlan(payload);
+      setItinerary(result.itinerary);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isFormValid =
+    form.source && form.destination && form.days && form.travelers && form.budget;
 
   return (
-    <div className={`min-h-screen flex flex-col ${darkMode ? 'bg-[#020817] text-white' : 'bg-gray-50 text-gray-900'}`}>
+    <div className="min-h-screen flex flex-col bg-[#020817] text-white">
       <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
-      
-      <main className="flex-grow pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-        
-        {/* Search Summary Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={`p-6 rounded-2xl mb-8 border ${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200 shadow-sm'}`}
-        >
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div>
-              <h1 className="text-2xl font-playfair font-bold mb-2">
-                We found <span className="text-emerald-400">12</span> destinations for your dream trip
-              </h1>
-              <div className="flex flex-wrap gap-3 text-sm opacity-70">
-                <span className="flex items-center gap-1"><MapPin size={14} /> Europe</span>
-                <span className="flex items-center gap-1"><Calendar size={14} /> 7 Days</span>
-                <span className="flex items-center gap-1"><DollarSign size={14} /> $2000 - $3000</span>
+
+      <main className="flex-grow pt-28 pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+
+          {/* ── Page header ── */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-10"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-4 text-sm font-medium"
+              style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', color: '#34d399' }}>
+              <Sparkles size={14} />
+              Powered by GPT-4o-mini
+            </div>
+            <h1 className="font-playfair text-4xl sm:text-5xl font-bold text-white mb-3">
+              Plan Your Dream Trip
+            </h1>
+            <p className="text-white/50 text-base max-w-md mx-auto">
+              Tell us where you want to go and we'll craft a personalised itinerary in seconds.
+            </p>
+          </motion.div>
+
+          {/* ── Trip form ── */}
+          <motion.form
+            onSubmit={handleSubmit}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="rounded-2xl p-6 sm:p-8 mb-8"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+
+              {/* Source */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wider text-white/50 flex items-center gap-1.5">
+                  <Plane size={12} className="text-emerald-400" /> Travelling From
+                </label>
+                <input
+                  type="text"
+                  name="source"
+                  value={form.source}
+                  onChange={handleChange}
+                  placeholder="e.g. Mumbai"
+                  required
+                  className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/30 outline-none transition-all focus:ring-2 focus:ring-emerald-500/50"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                />
+              </div>
+
+              {/* Destination */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wider text-white/50 flex items-center gap-1.5">
+                  <MapPin size={12} className="text-emerald-400" /> Destination
+                </label>
+                <input
+                  type="text"
+                  name="destination"
+                  value={form.destination}
+                  onChange={handleChange}
+                  placeholder="e.g. Bali, Indonesia"
+                  required
+                  className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/30 outline-none transition-all focus:ring-2 focus:ring-emerald-500/50"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                />
+              </div>
+
+              {/* Days */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wider text-white/50 flex items-center gap-1.5">
+                  <Calendar size={12} className="text-emerald-400" /> Duration (days)
+                </label>
+                <input
+                  type="number"
+                  name="days"
+                  value={form.days}
+                  onChange={handleChange}
+                  placeholder="e.g. 7"
+                  min={1}
+                  max={30}
+                  required
+                  className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/30 outline-none transition-all focus:ring-2 focus:ring-emerald-500/50"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                />
+              </div>
+
+              {/* Travelers */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wider text-white/50 flex items-center gap-1.5">
+                  <Users size={12} className="text-emerald-400" /> Travelers
+                </label>
+                <input
+                  type="number"
+                  name="travelers"
+                  value={form.travelers}
+                  onChange={handleChange}
+                  placeholder="e.g. 2"
+                  min={1}
+                  required
+                  className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/30 outline-none transition-all focus:ring-2 focus:ring-emerald-500/50"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                />
+              </div>
+
+              {/* Budget — full width */}
+              <div className="flex flex-col gap-1.5 sm:col-span-2">
+                <label className="text-xs font-semibold uppercase tracking-wider text-white/50 flex items-center gap-1.5">
+                  <DollarSign size={12} className="text-emerald-400" /> Total Budget (USD)
+                </label>
+                <input
+                  type="number"
+                  name="budget"
+                  value={form.budget}
+                  onChange={handleChange}
+                  placeholder="e.g. 2000"
+                  min={1}
+                  required
+                  className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/30 outline-none transition-all focus:ring-2 focus:ring-emerald-500/50"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                />
               </div>
             </div>
-            <button className={`px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium transition-colors ${darkMode ? 'bg-white/10 hover:bg-white/20' : 'bg-gray-100 hover:bg-gray-200'}`}>
-              <Search size={16} /> Edit Search
-            </button>
-          </div>
-        </motion.div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          
-          {/* Sidebar Filters */}
-          <aside className="w-full lg:w-64 flex-shrink-0">
-            <div className={`p-6 rounded-2xl sticky top-28 border ${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200 shadow-sm'}`}>
-              <div className="flex items-center gap-2 mb-6 pb-4 border-b border-white/10">
-                <Filter size={18} className="text-emerald-400" />
-                <h2 className="font-semibold text-lg">Filters</h2>
-              </div>
-              
-              <div className="space-y-6">
-                {/* Budget */}
-                <div>
-                  <h3 className="text-sm font-medium mb-3 opacity-80 uppercase tracking-wider">Budget Range</h3>
-                  <div className="space-y-2">
-                    {['Under $1000', '$1000 - $2000', '$2000 - $4000', '$4000+'].map((range) => (
-                      <label key={range} className="flex items-center gap-3 cursor-pointer group">
-                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${darkMode ? 'border-white/30 group-hover:border-emerald-400' : 'border-gray-300 group-hover:border-emerald-500'}`}></div>
-                        <span className="text-sm opacity-80 group-hover:opacity-100">{range}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
+            {/* Submit */}
+            <motion.button
+              type="submit"
+              disabled={!isFormValid || loading}
+              whileHover={isFormValid && !loading ? { scale: 1.02 } : {}}
+              whileTap={isFormValid && !loading ? { scale: 0.98 } : {}}
+              className="mt-6 w-full py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-all"
+              style={{
+                background: isFormValid && !loading
+                  ? 'linear-gradient(135deg, #10b981, #0ea5e9)'
+                  : 'rgba(255,255,255,0.08)',
+                cursor: isFormValid && !loading ? 'pointer' : 'not-allowed',
+                opacity: isFormValid && !loading ? 1 : 0.5,
+              }}
+            >
+              {loading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                  </svg>
+                  AI is planning your trip…
+                </>
+              ) : (
+                <>
+                  <Sparkles size={18} />
+                  Generate AI Plan
+                  <ArrowRight size={16} />
+                </>
+              )}
+            </motion.button>
+          </motion.form>
 
-                {/* Duration */}
-                <div>
-                  <h3 className="text-sm font-medium mb-3 opacity-80 uppercase tracking-wider">Trip Duration</h3>
-                  <div className="space-y-2">
-                    {['1-3 Days', '4-7 Days', '1-2 Weeks', '2+ Weeks'].map((duration) => (
-                      <label key={duration} className="flex items-center gap-3 cursor-pointer group">
-                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${darkMode ? 'border-white/30 group-hover:border-emerald-400' : 'border-gray-300 group-hover:border-emerald-500'}`}></div>
-                        <span className="text-sm opacity-80 group-hover:opacity-100">{duration}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Type */}
-                <div>
-                  <h3 className="text-sm font-medium mb-3 opacity-80 uppercase tracking-wider">Destination Type</h3>
-                  <div className="space-y-2">
-                    {['Beach', 'Mountain', 'City', 'Cultural'].map((type) => (
-                      <label key={type} className="flex items-center gap-3 cursor-pointer group">
-                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${darkMode ? 'border-white/30 group-hover:border-emerald-400' : 'border-gray-300 group-hover:border-emerald-500'}`}></div>
-                        <span className="text-sm opacity-80 group-hover:opacity-100">{type}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </aside>
-
-          {/* Results Grid */}
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {MOCK_DESTINATIONS.map((dest, index) => (
+          {/* ── Error ── */}
+          <AnimatePresence>
+            {error && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                key={dest.id}
-                className={`group rounded-2xl overflow-hidden border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
-                  darkMode ? 'bg-white/5 border-white/10 hover:shadow-emerald-500/10 hover:border-emerald-500/30' : 'bg-white border-gray-200 shadow-sm hover:shadow-emerald-500/10 hover:border-emerald-500/30'
-                }`}
+                exit={{ opacity: 0, y: 10 }}
+                className="flex items-start gap-3 p-4 rounded-xl mb-8 text-sm"
+                style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)' }}
               >
-                {/* Card Image Header */}
-                <div className="relative h-48 overflow-hidden">
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors z-10" />
-                  <img 
-                    src={dest.image} 
-                    alt={dest.name} 
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                  <div className="absolute top-3 right-3 z-20 flex items-center gap-1 bg-black/50 backdrop-blur-md px-2.5 py-1 rounded-full text-white text-xs font-semibold">
-                    <Star size={12} className="text-amber-400 fill-amber-400" />
-                    {dest.rating}
-                  </div>
-                  <div className="absolute top-3 left-3 z-20 bg-emerald-500/90 backdrop-blur-md px-2.5 py-1 rounded-full text-white text-xs font-medium">
-                    {dest.type}
-                  </div>
-                </div>
-
-                {/* Card Content */}
-                <div className="p-5">
-                  <h3 className="text-xl font-bold mb-1 font-playfair">{dest.name}</h3>
-                  <p className={`text-sm mb-4 line-clamp-2 ${darkMode ? 'text-white/60' : 'text-gray-600'}`}>
-                    {dest.description}
-                  </p>
-                  
-                  <div className="space-y-2 mb-6">
-                    <div className="flex items-center gap-2 text-sm">
-                      <DollarSign size={14} className="text-emerald-400" />
-                      <span className={darkMode ? 'text-white/80' : 'text-gray-700'}>{dest.budget} <span className="text-xs opacity-60">est. total</span></span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Calendar size={14} className="text-blue-400" />
-                      <span className={darkMode ? 'text-white/80' : 'text-gray-700'}>Best time: {dest.season}</span>
-                    </div>
-                  </div>
-
-                  <button className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 text-white font-medium text-sm transition-all shadow-md shadow-emerald-500/20 active:scale-[0.98]">
-                    Explore Destination
-                  </button>
-                </div>
+                <AlertCircle size={18} className="text-red-400 flex-shrink-0 mt-0.5" />
+                <p className="text-red-300">{error}</p>
               </motion.div>
-            ))}
-          </div>
+            )}
+          </AnimatePresence>
+
+          {/* ── Loading skeleton ── */}
+          <AnimatePresence>
+            {loading && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="rounded-2xl p-8 space-y-4"
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+              >
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ background: 'linear-gradient(135deg, #10b981, #0ea5e9)' }}>
+                    <Sparkles size={14} className="text-white animate-pulse" />
+                  </div>
+                  <div>
+                    <p className="text-white font-semibold text-sm">TripWise AI is crafting your itinerary</p>
+                    <p className="text-white/40 text-xs">This usually takes 10–20 seconds…</p>
+                  </div>
+                </div>
+                {[80, 60, 90, 50, 70, 40].map((w, i) => (
+                  <div
+                    key={i}
+                    className="h-3 rounded-full animate-pulse"
+                    style={{ width: `${w}%`, background: 'rgba(255,255,255,0.07)', animationDelay: `${i * 0.1}s` }}
+                  />
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── Itinerary result ── */}
+          <AnimatePresence>
+            {itinerary && !loading && (
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                {/* Result header */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                      style={{ background: 'linear-gradient(135deg, #10b981, #0ea5e9)' }}>
+                      <Sparkles size={13} className="text-white" />
+                    </div>
+                    <span className="text-white font-semibold">Your AI Itinerary</span>
+                  </div>
+                  <span className="text-xs text-white/40 px-3 py-1 rounded-full"
+                    style={{ background: 'rgba(255,255,255,0.05)' }}>
+                    {form.destination} · {form.days} days · {form.travelers} traveler{parseInt(form.travelers) > 1 ? 's' : ''}
+                  </span>
+                </div>
+
+                {/* Itinerary card */}
+                <div
+                  className="rounded-2xl p-6 sm:p-8 max-h-[75vh] overflow-y-auto scroll-smooth"
+                  style={{
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: 'rgba(16,185,129,0.3) transparent',
+                  }}
+                >
+                  {renderMarkdown(itinerary)}
+                </div>
+
+                {/* Re-plan button */}
+                <button
+                  onClick={() => { setItinerary(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  className="mt-4 text-sm text-white/40 hover:text-white/70 transition-colors flex items-center gap-1 mx-auto"
+                >
+                  ↑ Plan another trip
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
         </div>
       </main>
-      
+
       <Footer />
     </div>
   );
