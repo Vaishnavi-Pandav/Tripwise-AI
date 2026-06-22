@@ -27,3 +27,6 @@ class User(Base):
     reviews          = relationship("Review",           back_populates="user",     cascade="all, delete-orphan")
     preferences      = relationship("UserPreferences",  back_populates="user",     uselist=False, cascade="all, delete-orphan")
     ai_suggestions   = relationship("AITripSuggestion", back_populates="user",     cascade="all, delete-orphan")
+    favorites        = relationship("Favorite",         back_populates="user",     cascade="all, delete-orphan")
+    notifications    = relationship("Notification",     back_populates="user",     cascade="all, delete-orphan")
+    export_history   = relationship("ExportHistory",    back_populates="user",     cascade="all, delete-orphan")

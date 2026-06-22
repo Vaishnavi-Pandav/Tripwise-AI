@@ -76,6 +76,7 @@ class Trip(Base):
     expenses              = relationship("TripExpenses",          back_populates="trip",   uselist=False, cascade="all, delete-orphan")
     itineraries           = relationship("Itinerary",             back_populates="trip",   cascade="all, delete-orphan")
     saved_by              = relationship("SavedTrip",             back_populates="trip",   cascade="all, delete-orphan")
+    exports               = relationship("ExportHistory",         back_populates="trip",   cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<Trip id={self.id} dest={self.destination_location} status={self.trip_status}>"
