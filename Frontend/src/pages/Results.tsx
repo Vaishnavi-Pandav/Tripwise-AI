@@ -239,7 +239,7 @@ const Results = () => {
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-4 text-sm font-medium"
               style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', color: '#34d399' }}>
               <Sparkles size={14} />
-              Powered by GPT-4o-mini
+              Powered by Gemini AI
             </div>
             <h1 className="font-playfair text-4xl sm:text-5xl font-bold text-white mb-3">
               Plan Your Dream Trip
