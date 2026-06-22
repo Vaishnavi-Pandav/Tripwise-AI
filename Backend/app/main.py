@@ -7,7 +7,7 @@ import app.models  # noqa: F401 — registers all models with SQLAlchemy metadat
 from app.api import (
     admin, ai, attractions, auth,
     budget, comparison, hotels, itinerary,
-    packages, saved_trips, trips, weather,
+    packages, routes, saved_trips, trips, weather,
 )
 from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
@@ -38,6 +38,7 @@ app = FastAPI(
         {"name": "Destination Comparison",  "description": "Compare two destinations"},
         {"name": "Weather",                 "description": "Weather info by city"},
         {"name": "AI Assistant",            "description": "AI travel chat assistant"},
+        {"name": "Routes & Maps",           "description": "Route planning & nearby attractions"},
         {"name": "Saved Trips",             "description": "Save / unsave trips"},
         {"name": "Admin",                   "description": "Admin-only management endpoints"},
     ],
@@ -69,6 +70,7 @@ app.include_router(attractions.router, prefix=PREFIX)
 app.include_router(comparison.router,  prefix=PREFIX)
 app.include_router(weather.router,     prefix=PREFIX)
 app.include_router(ai.router,          prefix=PREFIX)
+app.include_router(routes.router,      prefix=PREFIX)
 app.include_router(saved_trips.router, prefix=PREFIX)
 app.include_router(admin.router,       prefix=PREFIX)
 
