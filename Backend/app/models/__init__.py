@@ -15,6 +15,8 @@ from app.models.review import Review
 from app.models.weather import WeatherDataCache
 from app.models.user_preferences import UserPreferences
 from app.models.ai_suggestion import AITripSuggestion
+from app.models.destination import Destination
+from app.models.route_history import RouteHistory
 
 __all__ = [
     "User",
@@ -33,4 +35,6 @@ __all__ = [
     "WeatherDataCache",
     "UserPreferences",
     "AITripSuggestion",
+    "Destination",
+    "RouteHistory",
 ]
