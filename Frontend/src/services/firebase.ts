@@ -5,12 +5,12 @@ import {
   signInWithPopup,
   signOut,
   onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
   type User,
 } from 'firebase/auth';
 
-// ── Firebase config ───────────────────────────────────────────────────────────
-// Replace these values with your Firebase project config from:
-// https://console.firebase.google.com → Project Settings → Your Apps
 const firebaseConfig = {
   apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -26,5 +26,9 @@ const provider = new GoogleAuthProvider();
 
 provider.setCustomParameters({ prompt: 'select_account' });
 
-export { auth, provider, signInWithPopup, signOut, onAuthStateChanged };
+export {
+  auth, provider,
+  signInWithPopup, signOut, onAuthStateChanged,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile,
+};
 export type { User };

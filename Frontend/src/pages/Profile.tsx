@@ -3,19 +3,23 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { motion } from 'framer-motion';
 import { User, MapPin, Calendar, Heart, Settings, LogOut, ChevronRight, Plane, Star } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
-const MOCK_USER = {
-  name: 'Sarah Jenkins',
-  email: 'sarah.jenkins@example.com',
-  avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=256&q=80',
-  memberSince: '2025',
-  stats: {
-    trips: 4,
-    countries: 3,
-    saved: 12
-  }
-};
+const Profile = () => {
+  const [darkMode, setDarkMode] = useState(true);
+  const [activeTab, setActiveTab] = useState('trips');
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const displayName = user?.displayName || user?.email?.split('@')[0] || 'Traveller';
+  const displayEmail = user?.email || '';
+  const avatarUrl = user?.photoURL || null;
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
 
 const SAVED_TRIPS = [
   {
@@ -79,20 +83,19 @@ const Profile = () => {
               {/* Avatar & Info */}
               <div className="flex flex-col items-center text-center pb-6 border-b border-white/10">
                 <div className="relative mb-4">
-                  <img 
-                    src={MOCK_USER.avatar} 
-                    alt={MOCK_USER.name} 
-                    className="w-24 h-24 rounded-full object-cover border-4 border-emerald-500/30"
-                  />
+                  {avatarUrl
+                    ? <img src={avatarUrl} alt={displayName} className="w-24 h-24 rounded-full object-cover border-4 border-emerald-500/30" />
+                    : <div className="w-24 h-24 rounded-full flex items-center justify-center text-white font-bold text-3xl border-4 border-emerald-500/30"
+                        style={{ background: 'linear-gradient(135deg,#10b981,#0ea5e9)' }}>
+                        {displayName[0].toUpperCase()}
+                      </div>
+                  }
                   <div className="absolute bottom-0 right-0 bg-emerald-500 text-white w-7 h-7 rounded-full flex items-center justify-center border-2 border-[#020817]">
                     <Star size={12} className="fill-white" />
                   </div>
                 </div>
-                <h1 className="text-xl font-bold font-playfair mb-1">{MOCK_USER.name}</h1>
-                <p className={`text-sm mb-2 ${darkMode ? 'text-white/60' : 'text-gray-500'}`}>{MOCK_USER.email}</p>
-                <span className={`text-xs px-3 py-1 rounded-full ${darkMode ? 'bg-white/10 text-white/80' : 'bg-gray-100 text-gray-700'}`}>
-                  Member since {MOCK_USER.memberSince}
-                </span>
+                <h1 className="text-xl font-bold font-playfair mb-1">{displayName}</h1>
+                <p className={`text-sm mb-2 ${darkMode ? 'text-white/60' : 'text-gray-500'}`}>{displayEmail}</p>
               </div>
 
               {/* Quick Stats */}
@@ -141,7 +144,7 @@ const Profile = () => {
                   <ChevronRight size={16} className="opacity-50" />
                 </button>
                 
-                <Link to="/login" className={`w-full flex items-center justify-between p-3 rounded-xl transition-colors mt-4 ${darkMode ? 'hover:bg-red-500/10 text-red-400' : 'hover:bg-red-50 text-red-600'}`}>
+                <Link to="/login" onClick={handleLogout} className={`w-full flex items-center justify-between p-3 rounded-xl transition-colors mt-4 ${darkMode ? 'hover:bg-red-500/10 text-red-400' : 'hover:bg-red-50 text-red-600'}`}>
                   <div className="flex items-center gap-3">
                     <LogOut size={18} /> <span className="font-medium text-sm">Log Out</span>
                   </div>
