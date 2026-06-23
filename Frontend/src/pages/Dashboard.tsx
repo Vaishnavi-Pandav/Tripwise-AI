@@ -3,10 +3,12 @@ import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Plane, MapPin, Calendar, DollarSign, TrendingUp,
-  Plus, Trash2, Eye, Sparkles, BarChart2, Globe,
+  Plus, Trash2, Eye, Sparkles, BarChart2, Globe, Map,
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import MapModal from '../components/MapModal';
+import { getCityCoordsWithFallback } from '../utils/cityCoords';
 import { useAuth } from '../context/AuthContext';
 import { getTrips, deleteTrip, getAnalytics, type Trip, type AnalyticsDashboard } from '../services/api';
 
@@ -24,6 +26,7 @@ const Dashboard = () => {
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState('');
   const [deletingId, setDeletingId]   = useState<string | null>(null);
+  const [showMap,    setShowMap]       = useState(false);
 
   const { user } = useAuth();
   const navigate  = useNavigate();
@@ -93,6 +96,14 @@ const Dashboard = () => {
               <Plus size={16} /> Plan New Trip
             </motion.button>
           </Link>
+          {trips.length > 0 && (
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
+              onClick={() => setShowMap(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm text-white/80 hover:text-white transition-colors"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <Map size={16} className="text-emerald-400" /> Show Map
+            </motion.button>
+          )}
         </motion.div>
 
         {error && (
@@ -209,6 +220,25 @@ const Dashboard = () => {
           </div>
         )}
       </main>
+
+      {/* Map Modal — only mounts when user clicks Show Map */}
+      <MapModal
+        isOpen={showMap}
+        onClose={() => setShowMap(false)}
+        title="Your Trip Destinations"
+        markers={trips
+          .filter(t => t.destination_location)
+          .map(t => {
+            const [lat, lng] = getCityCoordsWithFallback(t.destination_location);
+            return {
+              lat, lng,
+              title: t.destination_location,
+              description: `${t.number_of_days} days · ₹${t.budget.toLocaleString()}`,
+              category: t.trip_status,
+            };
+          })
+        }
+      />
 
       <Footer />
     </div>

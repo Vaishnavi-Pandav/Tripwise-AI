@@ -1,0 +1,103 @@
+/**
+ * Known city coordinates for map display.
+ * Used as fallback when backend doesn't return lat/lng with trips.
+ */
+const CITY_COORDS: Record<string, [number, number]> = {
+  // India
+  goa:          [15.2993, 74.1240],
+  manali:       [32.2396, 77.1887],
+  shimla:       [31.1048, 77.1734],
+  jaipur:       [26.9124, 75.7873],
+  udaipur:      [24.5854, 73.7125],
+  jodhpur:      [26.2389, 73.0243],
+  jaisalmer:    [26.9157, 70.9083],
+  mumbai:       [19.0760, 72.8777],
+  pune:         [18.5204, 73.8567],
+  delhi:        [28.6139, 77.2090],
+  agra:         [27.1767, 78.0081],
+  varanasi:     [25.3176, 82.9739],
+  lucknow:      [26.8467, 80.9462],
+  rishikesh:    [30.0869, 78.2676],
+  haridwar:     [29.9457, 78.1642],
+  nainital:     [29.3803, 79.4636],
+  mussoorie:    [30.4598, 78.0664],
+  dharamshala:  [32.2190, 76.3234],
+  kasol:        [32.0121, 77.3145],
+  leh:          [34.1526, 77.5771],
+  srinagar:     [34.0837, 74.7973],
+  amritsar:     [31.6340, 74.8723],
+  kolkata:      [22.5726, 88.3639],
+  darjeeling:   [27.0360, 88.2627],
+  gangtok:      [27.3314, 88.6138],
+  shillong:     [25.5788, 91.8933],
+  guwahati:     [26.1445, 91.7362],
+  kochi:        [9.9312,  76.2673],
+  munnar:       [10.0892, 77.0595],
+  alleppey:     [9.4981,  76.3388],
+  kovalam:      [8.4004,  76.9787],
+  varkala:      [8.7379,  76.7163],
+  wayanad:      [11.6854, 76.1320],
+  bangalore:    [12.9716, 77.5946],
+  mysore:       [12.2958, 76.6394],
+  coorg:        [12.4244, 75.7382],
+  hampi:        [15.3350, 76.4600],
+  gokarna:      [14.5479, 74.3188],
+  chikmagalur:  [13.3161, 75.7720],
+  chennai:      [13.0827, 80.2707],
+  ooty:         [11.4064, 76.6932],
+  kodaikanal:   [10.2381, 77.4892],
+  hyderabad:    [17.3850, 78.4867],
+  tirupati:     [13.6288, 79.4192],
+  visakhapatnam:[17.6868, 83.2185],
+  ahmedabad:    [23.0225, 72.5714],
+  surat:        [21.1702, 72.8311],
+  puri:         [19.8135, 85.8312],
+  bhubaneswar:  [20.2961, 85.8245],
+  khajuraho:    [24.8318, 79.9199],
+  bhopal:       [23.2599, 77.4126],
+  indore:       [22.7196, 75.8577],
+  // Global
+  bali:         [-8.3405, 115.0920],
+  bangkok:      [13.7563, 100.5018],
+  phuket:       [7.8804,  98.3923],
+  singapore:    [1.3521,  103.8198],
+  'kuala lumpur':[3.1390, 101.6869],
+  tokyo:        [35.6762, 139.6503],
+  kyoto:        [35.0116, 135.7681],
+  osaka:        [34.6937, 135.5023],
+  seoul:        [37.5665, 126.9780],
+  dubai:        [25.2048, 55.2708],
+  istanbul:     [41.0082, 28.9784],
+  paris:        [48.8566, 2.3522],
+  rome:         [41.9028, 12.4964],
+  barcelona:    [41.3851, 2.1734],
+  london:       [51.5074, -0.1278],
+  amsterdam:    [52.3676, 4.9041],
+  berlin:       [52.5200, 13.4050],
+  prague:       [50.0755, 14.4378],
+  vienna:       [48.2082, 16.3738],
+  budapest:     [47.4979, 19.0402],
+  'new york':   [40.7128, -74.0060],
+  'los angeles':[34.0522, -118.2437],
+  miami:        [25.7617, -80.1918],
+  cancun:       [21.1619, -86.8515],
+  sydney:       [-33.8688, 151.2093],
+  melbourne:    [-37.8136, 144.9631],
+  maldives:     [3.2028,  73.2207],
+  cairo:        [30.0444, 31.2357],
+  'cape town':  [-33.9249, 18.4241],
+  kathmandu:    [27.7172, 85.3240],
+  colombo:      [6.9271,  79.8612],
+};
+
+export function getCityCoords(cityName: string): [number, number] | null {
+  const key = cityName.toLowerCase().trim();
+  return CITY_COORDS[key] || null;
+}
+
+export function getCityCoordsWithFallback(
+  cityName: string,
+  fallback: [number, number] = [20.5937, 78.9629]
+): [number, number] {
+  return getCityCoords(cityName) || fallback;
+}
