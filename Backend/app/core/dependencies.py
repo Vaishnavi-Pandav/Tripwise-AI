@@ -14,15 +14,36 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 def _verify_firebase_token(token: str) -> dict | None:
-    """Try to verify a Firebase ID token. Returns decoded payload or None."""
+    """Verify a Firebase ID token using Google's public keys (no service account needed)."""
     try:
-        import firebase_admin
-        from firebase_admin import auth as firebase_auth
-        # Initialise app if not already done
-        if not firebase_admin._apps:
-            from app.core.firebase_admin_setup import init_firebase
-            init_firebase()
-        decoded = firebase_auth.verify_id_token(token)
+        import requests as req_lib
+        from jose import jwt as jose_jwt
+
+        # Get Google's public keys
+        certs_url = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com"
+        certs_resp = req_lib.get(certs_url, timeout=5)
+        certs = certs_resp.json()
+
+        # Decode header to get key ID
+        header = jose_jwt.get_unverified_header(token)
+        kid = header.get("kid")
+        if not kid or kid not in certs:
+            return None
+
+        # Get the public key
+        from cryptography import x509
+        from cryptography.hazmat.backends import default_backend
+        cert = x509.load_pem_x509_certificate(certs[kid].encode(), default_backend())
+        public_key = cert.public_key()
+
+        project_id = settings.FIREBASE_PROJECT_ID or "tripewiseai"
+        decoded = jose_jwt.decode(
+            token,
+            public_key,
+            algorithms=["RS256"],
+            audience=project_id,
+            issuer=f"https://securetoken.google.com/{project_id}",
+        )
         return decoded
     except Exception as e:
         logger.debug(f"Firebase token verification failed: {e}")

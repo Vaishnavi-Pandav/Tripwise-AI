@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Moon, Sun, Menu, X, Plane, User, Heart, Settings, LogOut, History, MapPin, ChevronDown, MessageCircle } from "lucide-react";
+import { Moon, Sun, Menu, X, Plane, User, Heart, Settings, LogOut, History, MapPin, ChevronDown, Building2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import LoginModal from "./LoginModal";
@@ -15,8 +15,8 @@ const navLinks = [
   { label: "Destinations", href: "/#destinations" },
   { label: "AI Planner",   href: "/#ai-planner" },
   { label: "Packages",     href: "/#packages" },
+  { label: "Agencies",     href: "/agencies", isRoute: true },
   { label: "Reviews",      href: "/#reviews" },
-  { label: "Contact",      href: "/#contact" },
 ];
 
 const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
@@ -44,17 +44,20 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
     return () => document.removeEventListener("mousedown", handleOutside);
   }, []);
 
-  const scrollTo = (href: string) => {
+  const scrollTo = (href: string, isRoute?: boolean) => {
     setMenuOpen(false);
-    if (href.startsWith("/#")) {
+    if (isRoute || !href.startsWith("/#")) {
+      navigate(href);
+    } else {
       if (window.location.pathname !== "/") navigate(href);
       else document.querySelector(href.replace("/#","#"))?.scrollIntoView({ behavior:"smooth", block:"start" });
     }
   };
 
+  // "Plan My Trip" → opens chat if logged in, else login modal
   const handlePlanMyTrip = () => {
     setMenuOpen(false);
-    if (user) navigate("/results");
+    if (user) navigate("/chat");
     else setShowLogin(true);
   };
 
@@ -126,8 +129,9 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
             {/* Desktop Nav Links */}
             <div className="hidden lg:flex items-center gap-8">
               {navLinks.map(link => (
-                <button key={link.href} onClick={() => scrollTo(link.href)}
+                <button key={link.href} onClick={() => scrollTo(link.href, link.isRoute)}
                   className={`nav-link bg-transparent border-none ${textMuted} hover:text-emerald-500 transition-colors font-medium text-sm`}>
+                  {link.label === 'Agencies' && <Building2 size={13} className="inline mr-1 text-emerald-400" />}
                   {link.label}
                 </button>
               ))}
@@ -144,16 +148,6 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
                 aria-label="Toggle dark mode">
                 {darkMode ? <Sun size={17} color="#fbbf24" /> : <Moon size={17} color="#6366f1" />}
               </motion.button>
-
-              {/* AI Chat button */}
-              <Link to="/chat" className="hidden sm:flex">
-                <motion.button whileHover={{ scale:1.05 }} whileTap={{ scale:0.95 }}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all ${textMuted} hover:text-emerald-500`}
-                  style={{ background: bgGlass, border:`1px solid ${borderGlass}` }}>
-                  <MessageCircle size={15} className="text-emerald-500" />
-                  <span className="hidden xl:inline">AI Chat</span>
-                </motion.button>
-              </Link>
 
               {/* Desktop auth */}
               <div className="hidden lg:flex items-center gap-2">
@@ -201,12 +195,11 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
                           </div>
                           <div className="p-2 flex flex-col gap-1">
                             {[
-                              { icon: User,           label:"My Profile",  to:"/profile" },
-                              { icon: MapPin,         label:"Saved Trips", to:"/profile" },
-                              { icon: History,        label:"Trip History",to:"/profile" },
-                              { icon: Heart,          label:"Wishlist",    to:"/profile" },
-                              { icon: MessageCircle,  label:"AI Chat",     to:"/chat" },
-                              { icon: Settings,       label:"Settings",    to:"/profile" },
+                              { icon: User,    label:"My Profile",  to:"/profile" },
+                              { icon: MapPin,  label:"Saved Trips", to:"/profile" },
+                              { icon: History, label:"Trip History",to:"/profile" },
+                              { icon: Heart,   label:"Wishlist",    to:"/profile" },
+                              { icon: Settings,label:"Settings",    to:"/profile" },
                             ].map((item,i) => (
                               <Link key={i} to={item.to} onClick={() => setDropdownOpen(false)}
                                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${dropdownItem}`}>
@@ -302,7 +295,7 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
                 <motion.button key={link.href}
                   initial={{ opacity:0, x:-20 }} animate={{ opacity:1, x:0 }}
                   transition={{ delay: i * 0.07 }}
-                  onClick={() => scrollTo(link.href)}
+                  onClick={() => scrollTo(link.href, link.isRoute)}
                   className={`text-left text-lg font-medium py-3 px-4 rounded-xl transition-all bg-transparent border-none cursor-pointer ${darkMode?"text-white/80 hover:text-white hover:bg-white/5":"text-gray-700 hover:text-gray-900 hover:bg-gray-100"}`}>
                   {link.label}
                 </motion.button>
