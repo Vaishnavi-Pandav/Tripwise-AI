@@ -5,6 +5,7 @@ import Login     from "../pages/Login";
 import Signup    from "../pages/Signup";
 import Profile   from "../pages/Profile";
 import Dashboard from "../pages/Dashboard";
+import Chat      from "../pages/Chat";
 import ProtectedRoute from "../components/ProtectedRoute";
 
 const AppRoutes = () => {
@@ -19,6 +20,7 @@ const AppRoutes = () => {
             <Route path="/results"   element={<ProtectedRoute><Results /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/profile"   element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/chat"      element={<ProtectedRoute><Chat /></ProtectedRoute>} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
