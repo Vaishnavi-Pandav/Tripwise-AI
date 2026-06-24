@@ -92,10 +92,16 @@ const api = axios.create({
 
 // Attach Firebase token to every request if user is logged in
 api.interceptors.request.use(async (config) => {
+  const { auth } = await import('./firebase');
+  // Wait for auth to be ready, then get token
   const currentUser = auth.currentUser;
   if (currentUser) {
-    const token = await currentUser.getIdToken();
-    config.headers.Authorization = `Bearer ${token}`;
+    try {
+      const token = await currentUser.getIdToken(/* forceRefresh */ false);
+      config.headers.Authorization = `Bearer ${token}`;
+    } catch (err) {
+      console.warn('Could not get Firebase token:', err);
+    }
   }
   return config;
 });
