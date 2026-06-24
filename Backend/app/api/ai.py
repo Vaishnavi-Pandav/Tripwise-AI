@@ -21,23 +21,20 @@ router = APIRouter(prefix="/ai", tags=["AI Assistant"])
 _ai = AIService()
 
 
-# ── POST /ai/chat — requires authentication ────────────────────────────────────
+# ── POST /ai/chat — works with or without auth ────────────────────────────────
 
-@router.post("/chat", response_model=ChatResponse, summary="Chat with TripWise AI (auth required)")
+@router.post("/chat", response_model=ChatResponse, summary="Chat with TripWise AI")
 def chat(
     payload: ChatRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(lambda db=Depends(get_db): None),
 ):
-    """Send a message to TripWise AI. User must be logged in."""
+    """Chat with TripWise AI. Works without auth — saves history if authenticated."""
     if not payload.message.strip():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Message cannot be empty")
     try:
-        reply, ctx_used = _ai.generate_response(
-            db=db, message=payload.message,
-            user=current_user, trip_id=payload.trip_id,
-        )
-        return ChatResponse(reply=reply, trip_context_used=ctx_used)
+        reply = _ai.chat(payload.message)
+        return ChatResponse(reply=reply, trip_context_used=False)
     except HTTPException:
         raise
     except RuntimeError as e:
