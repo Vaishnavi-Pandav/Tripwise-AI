@@ -336,14 +336,14 @@ const Results = () => {
               {/* Budget — full width */}
               <div className="flex flex-col gap-1.5 sm:col-span-2">
                 <label className="text-xs font-semibold uppercase tracking-wider text-white/50 flex items-center gap-1.5">
-                  <DollarSign size={12} className="text-emerald-400" /> Total Budget (USD)
+                  <DollarSign size={12} className="text-emerald-400" /> Total Budget (₹ INR)
                 </label>
                 <input
                   type="number"
                   name="budget"
                   value={form.budget}
                   onChange={handleChange}
-                  placeholder="e.g. 2000"
+                  placeholder="e.g. 15000"
                   min={1}
                   required
                   className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/30 outline-none transition-all focus:ring-2 focus:ring-emerald-500/50"

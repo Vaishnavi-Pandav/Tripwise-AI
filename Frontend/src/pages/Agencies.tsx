@@ -112,10 +112,17 @@ export default function Agencies() {
               style={{ background: darkMode ? 'rgba(255,255,255,0.06)' : 'white', border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb' }} />
           </div>
           <select value={selectedState} onChange={e => setSelectedState(e.target.value)}
-            className={`px-4 py-3 rounded-xl text-sm outline-none cursor-pointer min-w-[180px] ${darkMode ? 'text-white' : 'text-gray-900'}`}
-            style={{ background: darkMode ? 'rgba(255,255,255,0.06)' : 'white', border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb' }}>
-            <option value="All States">All States</option>
-            {ALL_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+            className="px-4 py-3 rounded-xl text-sm outline-none cursor-pointer min-w-[180px]"
+            style={{
+              background: darkMode ? '#0f172a' : 'white',
+              border: darkMode ? '1px solid rgba(255,255,255,0.15)' : '1px solid #e5e7eb',
+              color: darkMode ? 'white' : '#111827',
+              colorScheme: darkMode ? 'dark' : 'light',
+            }}>
+            <option value="All States" style={{ background: darkMode ? '#0f172a' : 'white', color: darkMode ? 'white' : '#111827' }}>All States</option>
+            {ALL_STATES.map(s => (
+              <option key={s} value={s} style={{ background: darkMode ? '#0f172a' : 'white', color: darkMode ? 'white' : '#111827' }}>{s}</option>
+            ))}
           </select>
         </div>
 
