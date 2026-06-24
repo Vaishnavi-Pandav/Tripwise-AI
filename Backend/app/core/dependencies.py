@@ -68,7 +68,7 @@ def _get_or_create_firebase_user(db: Session, firebase_payload: dict) -> User:
         user = User(
             full_name=name,
             email=email,
-            password_hash=hash_password(secrets.token_hex(16)),  # random unusable password
+            password_hash=hash_password(secrets.token_hex(16)[:72]),  # bcrypt max 72 bytes
         )
         db.add(user)
         db.commit()
