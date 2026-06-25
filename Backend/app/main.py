@@ -48,7 +48,7 @@ app = FastAPI(
     ],
 )
 
-app.add_middleware(RequestLoggingMiddleware)
+# ── CORS must be FIRST before any other middleware ────────────────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://localhost:5174",
@@ -58,6 +58,7 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"],
 )
+app.add_middleware(RequestLoggingMiddleware)
 register_exception_handlers(app)
 
 PREFIX = "/api/v1"

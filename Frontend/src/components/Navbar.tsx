@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Moon, Sun, Menu, X, Plane, User, Heart, Settings, LogOut, History, MapPin, ChevronDown, Building2 } from "lucide-react";
+import { Menu, X, Plane, User, Heart, Settings, LogOut, History, MapPin, ChevronDown, Building2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import LoginModal from "./LoginModal";
 
+// Dark mode removed — app is always dark
 interface NavbarProps {
-  darkMode: boolean;
-  setDarkMode: (v: boolean) => void;
+  darkMode?: boolean;
+  setDarkMode?: (v: boolean) => void;
 }
 
 const navLinks = [
@@ -19,10 +20,11 @@ const navLinks = [
   { label: "Reviews",      href: "/#reviews" },
 ];
 
-const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
+const Navbar = ({ }: NavbarProps) => {
   const [scrolled,     setScrolled]     = useState(false);
   const [menuOpen,     setMenuOpen]     = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
   const [showLogin,    setShowLogin]    = useState(false);
 
   const { user, logout } = useAuth();
@@ -70,21 +72,17 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
   const displayName = user?.displayName || user?.email?.split("@")[0] || "User";
   const displayEmail= user?.email || "";
 
-  // ── Dynamic color helpers ────────────────────────────────────────────────
-  const textColor      = darkMode ? "text-white"          : "text-gray-900";
-  const textMuted      = darkMode ? "text-white/70"        : "text-gray-600";
-  const bgGlass        = darkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)";
-  const borderGlass    = darkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)";
-  const navBg          = scrolled
-    ? darkMode ? "rgba(2,8,23,0.85)" : "rgba(255,255,255,0.92)"
-    : "transparent";
-  const navBorder      = scrolled
-    ? darkMode ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.08)"
-    : "none";
-  const dropdownBg     = darkMode ? "rgba(2,8,23,0.97)"   : "rgba(255,255,255,0.98)";
-  const dropdownBorder = darkMode ? "rgba(255,255,255,0.15)":"rgba(0,0,0,0.1)";
-  const dropdownItem   = darkMode ? "text-white/70 hover:text-white hover:bg-white/10" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100";
-  const mobileMenu     = darkMode ? "rgba(2,8,23,0.95)"   : "rgba(255,255,255,0.97)";
+  // ── Always dark — hardcoded colors ──────────────────────────────────────────
+  const textColor      = "text-white";
+  const textMuted      = "text-white/70";
+  const bgGlass        = "rgba(255,255,255,0.06)";
+  const borderGlass    = "rgba(255,255,255,0.12)";
+  const navBg          = scrolled ? "rgba(2,8,23,0.85)" : "transparent";
+  const navBorder      = scrolled ? "1px solid rgba(255,255,255,0.08)" : "none";
+  const dropdownBg     = "rgba(2,8,23,0.97)";
+  const dropdownBorder = "rgba(255,255,255,0.15)";
+  const dropdownItem   = "text-white/70 hover:text-white hover:bg-white/10";
+  const mobileMenu     = "rgba(2,8,23,0.95)";
 
   return (
     <>
@@ -140,14 +138,9 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
             {/* Right controls */}
             <div className="flex items-center gap-3">
 
-              {/* Dark mode toggle */}
-              <motion.button whileHover={{ scale:1.1 }} whileTap={{ scale:0.9 }}
-                onClick={() => setDarkMode(!darkMode)}
-                className="hidden sm:flex w-10 h-10 rounded-full items-center justify-center border transition-all"
-                style={{ background: bgGlass, borderColor: borderGlass }}
-                aria-label="Toggle dark mode">
-                {darkMode ? <Sun size={17} color="#fbbf24" /> : <Moon size={17} color="#6366f1" />}
-              </motion.button>
+              {/* Dark mode toggle removed — app is always dark */}
+
+
 
               {/* Desktop auth */}
               <div className="hidden lg:flex items-center gap-2">
@@ -179,7 +172,7 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
                             {displayName[0].toUpperCase()}
                           </div>
                       }
-                      <ChevronDown size={14} className={darkMode ? "text-white/70":"text-gray-500"} />
+                      <ChevronDown size={14} className="text-white/70" />
                     </motion.button>
 
                     <AnimatePresence>
@@ -189,7 +182,7 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
                           exit={{ opacity:0, y:10, scale:0.95 }} transition={{ duration:0.2 }}
                           className="absolute right-0 mt-3 w-60 rounded-2xl overflow-hidden shadow-2xl border"
                           style={{ background: dropdownBg, borderColor: dropdownBorder, backdropFilter:"blur(20px)" }}>
-                          <div className={`p-5 border-b ${darkMode?"border-white/10":"border-gray-100"}`}>
+                          <div className="p-5 border-b border-white/10">
                             <p className={`text-sm font-bold mb-0.5 ${textColor}`}>{displayName}</p>
                             <p className={`text-xs ${textMuted}`}>{displayEmail}</p>
                           </div>
@@ -222,7 +215,7 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
                   onClick={handlePlanMyTrip}
                   className="flex items-center gap-2 text-white ml-1"
                   style={{ background:"linear-gradient(135deg,#10b981,#0ea5e9)", padding:"10px 20px", borderRadius:"50px", fontSize:"14px", fontWeight:600, border:"none", cursor:"pointer" }}>
-                  <span>Plan My Trip</span>
+                  <span>AI Chat</span>
                   <Plane size={15} />
                 </motion.button>
               </div>
@@ -303,7 +296,7 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
 
               <motion.button initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.4 }}
                 onClick={handlePlanMyTrip} className="btn-primary mt-4">
-                Plan My Trip ✈️
+                AI Chat ✈️
               </motion.button>
             </div>
           </motion.div>
