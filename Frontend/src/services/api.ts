@@ -178,10 +178,18 @@ export async function removeFavorite(favoriteId: string) {
   await api.delete(`/api/v1/favorites/${favoriteId}`);
 }
 
+// ── Public Axios instance (no auth) for chat ─────────────────────────────────
+
+const publicApi = axios.create({
+  baseURL: 'http://localhost:8000',
+  headers: { 'Content-Type': 'application/json' },
+});
+
 // ── AI Chat ────────────────────────────────────────────────────────────────────
 
 export async function aiChat(message: string, tripId?: string) {
-  const { data } = await api.post('/api/v1/ai/chat', { message, trip_id: tripId });
+  // Use publicApi — no auth token needed for chat
+  const { data } = await publicApi.post('/api/v1/ai/chat', { message, trip_id: tripId });
   return data;
 }
 
