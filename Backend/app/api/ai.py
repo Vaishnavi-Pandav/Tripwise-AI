@@ -21,15 +21,11 @@ router = APIRouter(prefix="/ai", tags=["AI Assistant"])
 _ai = AIService()
 
 
-# ── POST /ai/chat — works with or without auth ────────────────────────────────
+# ── POST /ai/chat — public, no auth required ──────────────────────────────────
 
 @router.post("/chat", response_model=ChatResponse, summary="Chat with TripWise AI")
-def chat(
-    payload: ChatRequest,
-    db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(lambda db=Depends(get_db): None),
-):
-    """Chat with TripWise AI. Works without auth — saves history if authenticated."""
+def chat(payload: ChatRequest):
+    """Chat with TripWise AI. No authentication required."""
     if not payload.message.strip():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Message cannot be empty")
     try:
