@@ -77,7 +77,6 @@ const Navbar = ({ }: NavbarProps) => {
   const textMuted      = "text-white/70";
   const bgGlass        = "rgba(255,255,255,0.06)";
   const borderGlass    = "rgba(255,255,255,0.12)";
-  const navBg          = scrolled ? "rgba(2,8,23,0.85)" : "transparent";
   const navBorder      = scrolled ? "1px solid rgba(255,255,255,0.08)" : "none";
   const dropdownBg     = "rgba(2,8,23,0.97)";
   const dropdownBorder = "rgba(255,255,255,0.15)";
@@ -92,9 +91,7 @@ const Navbar = ({ }: NavbarProps) => {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
         style={{
-          background: scrolled
-            ? darkMode ? "rgba(2,8,23,0.85)" : "rgba(255,255,255,0.92)"
-            : "transparent",
+          background: scrolled ? "rgba(2,8,23,0.85)" : "transparent",
           backdropFilter: scrolled ? "blur(20px)" : "none",
           borderBottom: navBorder,
         }}
