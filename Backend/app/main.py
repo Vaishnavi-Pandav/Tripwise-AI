@@ -48,16 +48,23 @@ app = FastAPI(
     ],
 )
 
-app.add_middleware(RequestLoggingMiddleware)
+# ── CORS must be FIRST before any other middleware ────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174",
-                   "http://127.0.0.1:5173", settings.FRONTEND_URL],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5173",
+        settings.FRONTEND_URL,
+        "https://*.vercel.app",          # all Vercel preview URLs
+        "https://tripwise-ai.vercel.app", # your production Vercel URL
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
 )
+app.add_middleware(RequestLoggingMiddleware)
 register_exception_handlers(app)
 
 PREFIX = "/api/v1"

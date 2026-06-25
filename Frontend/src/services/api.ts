@@ -85,8 +85,10 @@ export interface SearchResult {
 
 // ── Axios instance ─────────────────────────────────────────────────────────────
 
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -181,7 +183,7 @@ export async function removeFavorite(favoriteId: string) {
 // ── Public Axios instance (no auth) for chat ─────────────────────────────────
 
 const publicApi = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
 });
 
