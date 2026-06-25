@@ -28,6 +28,9 @@ class Settings:
     WEATHER_API_KEY: str = os.getenv("WEATHER_API_KEY", "")
     WEATHER_API_URL: str = "https://api.openweathermap.org/data/2.5"
 
+    # Firebase
+    FIREBASE_PROJECT_ID: str = os.getenv("FIREBASE_PROJECT_ID", "")
+
     # Admin
     ADMIN_SECRET: str = os.getenv("ADMIN_SECRET", "admin-secret")
 

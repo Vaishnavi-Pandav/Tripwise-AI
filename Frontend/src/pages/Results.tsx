@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MapPin, Calendar, Users, DollarSign,
-  Sparkles, ArrowRight, Plane, AlertCircle,
+  Sparkles, ArrowRight, Plane, AlertCircle, Map,
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import RouteMapModal from '../components/RouteMapModal';
 import { generateTripPlan, type TripGenerationRequest } from '../services/api';
 
 // ── Markdown renderer ─────────────────────────────────────────────────────────
@@ -189,6 +190,7 @@ const Results = () => {
   const [loading, setLoading] = useState(false);
   const [itinerary, setItinerary] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showRouteMap, setShowRouteMap] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -239,7 +241,7 @@ const Results = () => {
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-4 text-sm font-medium"
               style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', color: '#34d399' }}>
               <Sparkles size={14} />
-              Powered by GPT-4o-mini
+              Powered by Gemini AI
             </div>
             <h1 className="font-playfair text-4xl sm:text-5xl font-bold text-white mb-3">
               Plan Your Dream Trip
@@ -334,14 +336,14 @@ const Results = () => {
               {/* Budget — full width */}
               <div className="flex flex-col gap-1.5 sm:col-span-2">
                 <label className="text-xs font-semibold uppercase tracking-wider text-white/50 flex items-center gap-1.5">
-                  <DollarSign size={12} className="text-emerald-400" /> Total Budget (USD)
+                  <DollarSign size={12} className="text-emerald-400" /> Total Budget (₹ INR)
                 </label>
                 <input
                   type="number"
                   name="budget"
                   value={form.budget}
                   onChange={handleChange}
-                  placeholder="e.g. 2000"
+                  placeholder="e.g. 15000"
                   min={1}
                   required
                   className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/30 outline-none transition-all focus:ring-2 focus:ring-emerald-500/50"
@@ -448,10 +450,18 @@ const Results = () => {
                     </div>
                     <span className="text-white font-semibold">Your AI Itinerary</span>
                   </div>
-                  <span className="text-xs text-white/40 px-3 py-1 rounded-full"
-                    style={{ background: 'rgba(255,255,255,0.05)' }}>
-                    {form.destination} · {form.days} days · {form.travelers} traveler{parseInt(form.travelers) > 1 ? 's' : ''}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setShowRouteMap(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-white/70 hover:text-white transition-colors"
+                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      <Map size={13} className="text-emerald-400" /> View Route Map
+                    </button>
+                    <span className="text-xs text-white/40 px-3 py-1 rounded-full"
+                      style={{ background: 'rgba(255,255,255,0.05)' }}>
+                      {form.destination} · {form.days} days · {form.travelers} traveler{parseInt(form.travelers) > 1 ? 's' : ''}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Itinerary card */}
@@ -469,7 +479,7 @@ const Results = () => {
 
                 {/* Re-plan button */}
                 <button
-                  onClick={() => { setItinerary(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  onClick={() => { setItinerary(null); setShowRouteMap(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                   className="mt-4 text-sm text-white/40 hover:text-white/70 transition-colors flex items-center gap-1 mx-auto"
                 >
                   ↑ Plan another trip
@@ -477,6 +487,17 @@ const Results = () => {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Route Map Modal */}
+          <RouteMapModal
+            isOpen={showRouteMap}
+            onClose={() => setShowRouteMap(false)}
+            source={form.source}
+            destination={form.destination}
+            days={parseInt(form.days) || undefined}
+            travelers={parseInt(form.travelers) || undefined}
+            budget={parseFloat(form.budget) || undefined}
+          />
 
         </div>
       </main>

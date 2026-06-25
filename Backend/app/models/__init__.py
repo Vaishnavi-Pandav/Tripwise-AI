@@ -1,4 +1,4 @@
-# Import all models here so SQLAlchemy and Alembic can discover them.
+# Import all models — SQLAlchemy & Alembic discovery
 from app.models.user import User
 from app.models.trip import Trip
 from app.models.hotel import Hotel
@@ -17,24 +17,14 @@ from app.models.user_preferences import UserPreferences
 from app.models.ai_suggestion import AITripSuggestion
 from app.models.destination import Destination
 from app.models.route_history import RouteHistory
+from app.models.favorite import Favorite
+from app.models.notification import Notification
+from app.models.export_history import ExportHistory
 
 __all__ = [
-    "User",
-    "Trip",
-    "Hotel",
-    "HotelRecommendation",
-    "TravelPackage",
-    "TripExpenses",
-    "Itinerary",
-    "Attraction",
-    "HiddenGem",
-    "DestinationComparison",
-    "SavedTrip",
-    "AIChatHistory",
-    "Review",
-    "WeatherDataCache",
-    "UserPreferences",
-    "AITripSuggestion",
-    "Destination",
-    "RouteHistory",
+    "User", "Trip", "Hotel", "HotelRecommendation", "TravelPackage",
+    "TripExpenses", "Itinerary", "Attraction", "HiddenGem",
+    "DestinationComparison", "SavedTrip", "AIChatHistory", "Review",
+    "WeatherDataCache", "UserPreferences", "AITripSuggestion",
+    "Destination", "RouteHistory", "Favorite", "Notification", "ExportHistory",
 ]
