@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Bot, User, Sparkles, Plane, RotateCcw, Copy, Check } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Send, Bot, User, Sparkles, RotateCcw, Copy, Check } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import { aiChat } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -52,6 +51,7 @@ export default function Chat() {
   const [input, setInput]       = useState('');
   const [loading, setLoading]   = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [cooldown, setCooldown] = useState(0);
   const bottomRef               = useRef<HTMLDivElement>(null);
   const inputRef                = useRef<HTMLTextAreaElement>(null);
   const { user } = useAuth();
@@ -60,12 +60,20 @@ export default function Chat() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldown]);
+
   const sendMessage = async (text: string) => {
-    if (!text.trim() || loading) return;
+    if (!text.trim() || loading || cooldown > 0) return;
     const userMsg: Message = { id: Date.now().toString(), role: 'user', content: text.trim(), timestamp: new Date() };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
+    setCooldown(3);
     try {
       const res = await aiChat(text.trim());
       const aiMsg: Message = { id: (Date.now()+1).toString(), role: 'assistant', content: res.reply, timestamp: new Date() };
@@ -252,13 +260,17 @@ export default function Chat() {
                 />
               </div>
               <motion.button
-                whileHover={input.trim() && !loading ? { scale:1.05 } : {}}
-                whileTap={input.trim() && !loading ? { scale:0.95 } : {}}
+                whileHover={input.trim() && !loading && cooldown === 0 ? { scale:1.05 } : {}}
+                whileTap={input.trim() && !loading && cooldown === 0 ? { scale:0.95 } : {}}
                 onClick={() => sendMessage(input)}
-                disabled={!input.trim() || loading}
+                disabled={!input.trim() || loading || cooldown > 0}
                 className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-all disabled:opacity-40"
-                style={{ background: input.trim() && !loading ? 'linear-gradient(135deg,#10b981,#0ea5e9)' : 'rgba(255,255,255,0.08)' }}>
-                <Send size={18} className="text-white" />
+                style={{ background: input.trim() && !loading && cooldown === 0 ? 'linear-gradient(135deg,#10b981,#0ea5e9)' : 'rgba(255,255,255,0.08)' }}>
+                {cooldown > 0 ? (
+                  <span className="text-white text-xs font-medium">{cooldown}s</span>
+                ) : (
+                  <Send size={18} className="text-white" />
+                )}
               </motion.button>
             </div>
             <p className={`text-xs mt-2 text-center ${darkMode?'text-white/20':'text-gray-400'}`}>

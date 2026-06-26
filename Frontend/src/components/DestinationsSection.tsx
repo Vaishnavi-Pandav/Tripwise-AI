@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { MapPin, Star, TrendingUp, ArrowRight } from "lucide-react";
+import { MapPin, TrendingUp, ArrowRight } from "lucide-react";
 
 const destinations = [
   {

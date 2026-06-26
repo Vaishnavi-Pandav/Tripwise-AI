@@ -3,9 +3,9 @@ import math
 from typing import Optional
 
 from fastapi import HTTPException, status
-from google import genai
-from google.genai import types
 from sqlalchemy.orm import Session
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
 from app.core.config import settings
 from app.models.ai_chat import AIChatHistory
@@ -56,8 +56,18 @@ class AIService:
     def __init__(self):
         if not settings.GEMINI_API_KEY:
             raise RuntimeError("GEMINI_API_KEY is not set in the environment.")
-        self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
-        self.model  = settings.GEMINI_MODEL
+        self.llm = ChatGoogleGenerativeAI(
+            model=settings.GEMINI_MODEL,
+            google_api_key=settings.GEMINI_API_KEY,
+            temperature=0.7,
+            max_output_tokens=1500,
+        )
+        self.itinerary_llm = ChatGoogleGenerativeAI(
+            model=settings.GEMINI_MODEL,
+            google_api_key=settings.GEMINI_API_KEY,
+            temperature=0.7,
+            max_output_tokens=3000,
+        )
 
     # ── Core generation ───────────────────────────────────────────────────────
 
@@ -69,7 +79,7 @@ class AIService:
         trip_id: Optional[str] = None,
     ) -> tuple[str, bool]:
         """
-        Generate an AI response, optionally enriched with trip context.
+        Generate an AI response, optionally enriched with trip context and chat history.
         Returns (reply_text, trip_context_used).
         """
         context_used = False
@@ -89,19 +99,23 @@ class AIService:
                 )
                 context_used = True
 
+        # Fetch last 5 messages for context
+        history = db.query(AIChatHistory).filter(
+            AIChatHistory.user_id == user.id,
+            AIChatHistory.trip_id == trip_id
+        ).order_by(AIChatHistory.created_at.desc()).limit(5).all()
+        
+        messages = [SystemMessage(content=system_prompt)]
+        for h in reversed(history):
+            messages.append(HumanMessage(content=h.user_message))
+            messages.append(AIMessage(content=h.ai_response))
+        messages.append(HumanMessage(content=message))
+
         try:
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=message,
-                config=types.GenerateContentConfig(
-                    system_instruction=system_prompt,
-                    temperature=0.7,
-                    max_output_tokens=1500,
-                ),
-            )
-            reply = response.text
+            response = self.llm.invoke(messages)
+            reply = response.content
         except Exception as e:
-            logger.error(f"Gemini generate_response error: {e}")
+            logger.error(f"LangChain generate_response error: {e}")
             self._handle_gemini_error(e)
 
         # Save to chat history
@@ -225,19 +239,15 @@ with restaurant suggestions and booking requirements.
 ## 💡 Travel Tips
 3–5 practical tips for this destination.
 """
+        messages = [
+            SystemMessage(content="You are a travel planning expert. Respond in well-structured Markdown."),
+            HumanMessage(content=prompt)
+        ]
         try:
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    system_instruction="You are a travel planning expert. Respond in well-structured Markdown.",
-                    temperature=0.7,
-                    max_output_tokens=3000,
-                ),
-            )
-            return response.text
+            response = self.itinerary_llm.invoke(messages)
+            return response.content
         except Exception as e:
-            logger.error(f"Gemini itinerary error: {e}")
+            logger.error(f"LangChain itinerary error: {e}")
             self._handle_gemini_error(e)
 
     # ── Helpers ───────────────────────────────────────────────────────────────
@@ -264,18 +274,14 @@ with restaurant suggestions and booking requirements.
     # ── Legacy alias ─────────────────────────────────────────────────────────
 
     def chat(self, message: str) -> str:
-        """Simple chat without DB persistence (used by public /ai/generate)."""
+        """Simple chat without DB persistence (used by public /ai/chat)."""
+        messages = [
+            SystemMessage(content=BASE_SYSTEM_PROMPT),
+            HumanMessage(content=message)
+        ]
         try:
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=message,
-                config=types.GenerateContentConfig(
-                    system_instruction=BASE_SYSTEM_PROMPT,
-                    temperature=0.7,
-                    max_output_tokens=1000,
-                ),
-            )
-            return response.text
+            response = self.llm.invoke(messages)
+            return response.content
         except Exception as e:
-            logger.error(f"Gemini chat error: {e}")
+            logger.error(f"LangChain chat error: {e}")
             self._handle_gemini_error(e)

@@ -1,7 +1,10 @@
 import logging
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 import app.models  # noqa: F401
 from app.api import (
@@ -12,11 +15,13 @@ from app.api import (
 )
 from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
+from app.core.rate_limit import limiter
 from app.db.session import Base, engine
 from app.middleware.logging import RequestLoggingMiddleware
 
 logging.basicConfig(level=logging.INFO)
-Base.metadata.create_all(bind=engine)
+if os.getenv("RUN_MIGRATIONS", "false").lower() == "true":
+    Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -56,15 +61,17 @@ app.add_middleware(
         "http://localhost:5174",
         "http://127.0.0.1:5173",
         settings.FRONTEND_URL,
-        "https://*.vercel.app",          # all Vercel preview URLs
         "https://tripwise-ai.vercel.app", # your production Vercel URL
     ],
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
 )
 app.add_middleware(RequestLoggingMiddleware)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 register_exception_handlers(app)
 
 PREFIX = "/api/v1"

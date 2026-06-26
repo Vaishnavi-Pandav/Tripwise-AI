@@ -20,7 +20,6 @@ interface MapModalProps {
 }
 
 // Lazy-load Leaflet only when map is opened
-let leafletLoaded = false;
 
 export default function MapModal({
   isOpen, onClose, title, markers, center, zoom = 10,

@@ -201,6 +201,7 @@ const Dashboard = () => {
                       <span className="flex items-center gap-1"><DollarSign size={11} /> ₹{trip.budget.toLocaleString()}</span>
                       {trip.travel_mode && <span className="flex items-center gap-1"><Plane size={11} /> {trip.travel_mode}</span>}
                       <span>{new Date(trip.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })}</span>
+                      <span className="flex items-center gap-1 text-emerald-400 font-medium ml-2"><Sparkles size={11} /> Planned using AI</span>
                     </div>
                   </div>
                 </div>

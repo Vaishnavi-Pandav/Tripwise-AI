@@ -2,26 +2,17 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Heart, MapPin, Settings, LogOut,
+  Settings, LogOut,
   ChevronRight, Plane, Star, BarChart2,
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
 
-// Sample wishlist destinations (UI placeholder — connect to favorites API later)
-const WISHLIST = [
-  { id: 'w1', name: 'Amalfi Coast', country: 'Italy',
-    image: 'https://images.unsplash.com/photo-1533676802871-eca1ae998cd5?auto=format&fit=crop&w=400&q=80' },
-  { id: 'w2', name: 'Santorini',    country: 'Greece',
-    image: 'https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?auto=format&fit=crop&w=400&q=80' },
-  { id: 'w3', name: 'Banff',        country: 'Canada',
-    image: 'https://images.unsplash.com/photo-1521404169724-699e190ebf9e?auto=format&fit=crop&w=400&q=80' },
-];
 
 const Profile = () => {
   const [darkMode,   setDarkMode]   = useState(true);
-  const [activeTab,  setActiveTab]  = useState<'dashboard'|'wishlist'|'settings'>('dashboard');
+  const [activeTab,  setActiveTab]  = useState<'dashboard'|'settings'>('dashboard');
   const { user, logout }            = useAuth();
   const navigate                    = useNavigate();
 
@@ -36,7 +27,6 @@ const Profile = () => {
 
   const navItems = [
     { key: 'dashboard', icon: BarChart2, label: 'My Dashboard' },
-    { key: 'wishlist',  icon: Heart,     label: 'Wishlist' },
     { key: 'settings',  icon: Settings,  label: 'Account Settings' },
   ] as const;
 
@@ -115,32 +105,6 @@ const Profile = () => {
               </motion.div>
             )}
 
-            {/* Wishlist tab */}
-            {activeTab === 'wishlist' && (
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                <h2 className="text-2xl font-playfair font-bold mb-8">Saved Destinations</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {WISHLIST.map(item => (
-                    <div key={item.id}
-                      className={`group rounded-2xl overflow-hidden border transition-all hover:-translate-y-1 ${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200 shadow-sm'}`}>
-                      <div className="relative h-40 overflow-hidden">
-                        <img src={item.image} alt={item.name}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                        <button className="absolute top-3 right-3 p-2 bg-black/40 backdrop-blur-md rounded-full text-white hover:bg-red-500/80 transition-colors">
-                          <Heart size={14} className="fill-white" />
-                        </button>
-                      </div>
-                      <div className="p-4">
-                        <h3 className="font-bold text-lg">{item.name}</h3>
-                        <div className="flex items-center gap-1.5 text-sm mt-1 text-white/60">
-                          <MapPin size={12} className="text-emerald-400" /> {item.country}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
 
             {/* Settings tab */}
             {activeTab === 'settings' && (
