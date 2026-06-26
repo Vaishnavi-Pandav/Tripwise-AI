@@ -10,7 +10,11 @@ class Settings:
     DESCRIPTION: str = "AI-Powered Travel Planning Platform"
 
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./tripwise.db")
+    _DB_URL: str = os.getenv("DATABASE_URL", "sqlite:///./tripwise.db")
+    if _DB_URL.startswith("postgresql://"):
+        DATABASE_URL: str = _DB_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
+    else:
+        DATABASE_URL: str = _DB_URL
 
     # Gemini AI
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
@@ -33,6 +37,9 @@ class Settings:
 
     # Admin
     ADMIN_SECRET: str = os.getenv("ADMIN_SECRET", "admin-secret")
+
+    # Rate Limiting
+    AI_RATE_LIMIT_PER_MINUTE: int = int(os.getenv("AI_RATE_LIMIT_PER_MINUTE", 10))
 
 
 settings = Settings()

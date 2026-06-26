@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MapPin, Calendar, Users, DollarSign,
@@ -12,9 +13,9 @@ import { generateTripPlan, type TripGenerationRequest } from '../services/api';
 // ── Markdown renderer ─────────────────────────────────────────────────────────
 // Converts the markdown returned by the AI into styled JSX without extra deps.
 
-function renderMarkdown(text: string): JSX.Element {
+function renderMarkdown(text: string): React.ReactElement {
   const lines = text.split('\n');
-  const elements: JSX.Element[] = [];
+  const elements: React.ReactElement[] = [];
   let keyIdx = 0;
   let tableBuffer: string[] = [];
 

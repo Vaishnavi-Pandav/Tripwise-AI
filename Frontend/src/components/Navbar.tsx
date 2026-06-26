@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Plane, User, Heart, Settings, LogOut, History, MapPin, ChevronDown, Building2 } from "lucide-react";
+import { Menu, X, Plane, User, Settings, LogOut, History, MapPin, ChevronDown, Building2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import LoginModal from "./LoginModal";
 
-// Dark mode removed — app is always dark
+// Dark mode removed â€” app is always dark
 interface NavbarProps {
   darkMode?: boolean;
   setDarkMode?: (v: boolean) => void;
@@ -56,7 +56,7 @@ const Navbar = ({ }: NavbarProps) => {
     }
   };
 
-  // "Plan My Trip" → opens chat if logged in, else login modal
+  // "Plan My Trip" â†’ opens chat if logged in, else login modal
   const handlePlanMyTrip = () => {
     setMenuOpen(false);
     if (user) navigate("/chat");
@@ -72,7 +72,7 @@ const Navbar = ({ }: NavbarProps) => {
   const displayName = user?.displayName || user?.email?.split("@")[0] || "User";
   const displayEmail= user?.email || "";
 
-  // ── Always dark — hardcoded colors ──────────────────────────────────────────
+  // â”€â”€ Always dark â€” hardcoded colors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const textColor      = "text-white";
   const textMuted      = "text-white/70";
   const bgGlass        = "rgba(255,255,255,0.06)";
@@ -135,7 +135,7 @@ const Navbar = ({ }: NavbarProps) => {
             {/* Right controls */}
             <div className="flex items-center gap-3">
 
-              {/* Dark mode toggle removed — app is always dark */}
+              {/* Dark mode toggle removed â€” app is always dark */}
 
 
 
@@ -188,7 +188,6 @@ const Navbar = ({ }: NavbarProps) => {
                               { icon: User,    label:"My Profile",  to:"/profile" },
                               { icon: MapPin,  label:"Saved Trips", to:"/profile" },
                               { icon: History, label:"Trip History",to:"/profile" },
-                              { icon: Heart,   label:"Wishlist",    to:"/profile" },
                               { icon: Settings,label:"Settings",    to:"/profile" },
                             ].map((item,i) => (
                               <Link key={i} to={item.to} onClick={() => setDropdownOpen(false)}
@@ -196,7 +195,7 @@ const Navbar = ({ }: NavbarProps) => {
                                 <item.icon size={16} className="text-emerald-500" /> {item.label}
                               </Link>
                             ))}
-                            <div className={`h-px my-2 mx-2 ${darkMode?"bg-white/10":"bg-gray-100"}`} />
+                            <div className={`h-px my-2 mx-2 ${"bg-white/10"}`} />
                             <button onClick={handleLogout}
                               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors text-left">
                               <LogOut size={16} /> Logout
@@ -240,11 +239,11 @@ const Navbar = ({ }: NavbarProps) => {
             <div className="min-h-full p-6 flex flex-col gap-4 pb-20"
               style={{ background: mobileMenu, backdropFilter:"blur(20px)" }}>
 
-              <div className={`flex flex-col gap-3 mb-6 pb-6 border-b ${darkMode?"border-white/10":"border-gray-200"}`}>
+              <div className={`flex flex-col gap-3 mb-6 pb-6 border-b ${"border-white/10"}`}>
                 {!user ? (
                   <>
                     <button onClick={() => { setMenuOpen(false); setShowLogin(true); }}
-                      className={`w-full py-3 rounded-xl font-medium border transition-colors ${darkMode?"bg-white/5 border-white/10 text-white hover:bg-white/10":"bg-gray-50 border-gray-200 text-gray-900 hover:bg-gray-100"}`}>
+                      className={`w-full py-3 rounded-xl font-medium border transition-colors bg-white/5 border-white/10 text-white hover:bg-white/10`}>
                       Log In
                     </button>
                     <button onClick={() => { setMenuOpen(false); setShowLogin(true); }}
@@ -255,7 +254,7 @@ const Navbar = ({ }: NavbarProps) => {
                   </>
                 ) : (
                   <div className="flex flex-col gap-3">
-                    <div className={`flex items-center gap-4 p-4 rounded-2xl border ${darkMode?"bg-white/5 border-white/10":"bg-gray-50 border-gray-200"}`}>
+                    <div className={`flex items-center gap-4 p-4 rounded-2xl border ${"bg-white/5 border-white/10"}`}>
                       {avatarUrl
                         ? <img src={avatarUrl} alt="avatar" className="w-12 h-12 rounded-full object-cover border-2 border-emerald-500/50" />
                         : <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
@@ -269,8 +268,8 @@ const Navbar = ({ }: NavbarProps) => {
                       </div>
                     </div>
                     <Link to="/chat" onClick={() => setMenuOpen(false)}>
-                      <button className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-medium border transition-colors ${darkMode?"bg-white/5 border-white/10 text-white":"bg-gray-50 border-gray-200 text-gray-900"}`}>
-                        <MessageCircle size={16} className="text-emerald-500" /> AI Chat
+                      <button className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-medium border transition-colors ${"bg-white/5 border-white/10 text-white"}`}>
+                        AI Chat
                       </button>
                     </Link>
                     <button onClick={handleLogout}
@@ -286,14 +285,14 @@ const Navbar = ({ }: NavbarProps) => {
                   initial={{ opacity:0, x:-20 }} animate={{ opacity:1, x:0 }}
                   transition={{ delay: i * 0.07 }}
                   onClick={() => scrollTo(link.href, link.isRoute)}
-                  className={`text-left text-lg font-medium py-3 px-4 rounded-xl transition-all bg-transparent border-none cursor-pointer ${darkMode?"text-white/80 hover:text-white hover:bg-white/5":"text-gray-700 hover:text-gray-900 hover:bg-gray-100"}`}>
+                  className={`text-left text-lg font-medium py-3 px-4 rounded-xl transition-all bg-transparent border-none cursor-pointer ${"text-white/80 hover:text-white hover:bg-white/5"}`}>
                   {link.label}
                 </motion.button>
               ))}
 
               <motion.button initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.4 }}
                 onClick={handlePlanMyTrip} className="btn-primary mt-4">
-                AI Chat ✈️
+                AI Chat âœˆï¸
               </motion.button>
             </div>
           </motion.div>

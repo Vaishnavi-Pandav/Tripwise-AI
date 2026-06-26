@@ -14,6 +14,7 @@ from app.models.user import User
 logger = logging.getLogger("tripwise")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
 
 
 def _decode_firebase_token_simple(token: str) -> Optional[dict]:
@@ -106,6 +107,18 @@ def get_current_user(
     if not user:
         raise credentials_error
     return user
+
+
+def get_current_user_optional(
+    token: Optional[str] = Depends(oauth2_scheme_optional),
+    db: Session = Depends(get_db),
+) -> Optional[User]:
+    if not token:
+        return None
+    try:
+        return get_current_user(token, db)
+    except HTTPException:
+        return None
 
 
 def get_current_admin(current_user: User = Depends(get_current_user)) -> User:

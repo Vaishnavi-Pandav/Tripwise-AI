@@ -1,24 +1,17 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Navigation, Plane, Train, Car, Bus } from 'lucide-react';
+import { X, Navigation } from 'lucide-react';
 import { getCityCoordsWithFallback } from '../utils/cityCoords';
 
 interface RouteMapModalProps {
-  isOpen:      boolean;
-  onClose:     () => void;
-  source:      string;
+  isOpen: boolean;
+  onClose: () => void;
+  source: string;
   destination: string;
-  days?:       number;
-  travelers?:  number;
-  budget?:     number;
+  days?: number;
+  travelers?: number;
+  budget?: number;
 }
-
-const modeIcons: Record<string, React.ReactNode> = {
-  flight: <Plane  size={14} />,
-  train:  <Train  size={14} />,
-  car:    <Car    size={14} />,
-  bus:    <Bus    size={14} />,
-};
 
 export default function RouteMapModal({
   isOpen, onClose, source, destination, days, travelers, budget,

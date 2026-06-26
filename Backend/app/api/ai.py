@@ -1,10 +1,11 @@
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
 from sqlalchemy.orm import Session
 
-from app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user, get_current_user_optional
+from app.core.rate_limit import limiter
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.ai import (
@@ -21,16 +22,26 @@ router = APIRouter(prefix="/ai", tags=["AI Assistant"])
 _ai = AIService()
 
 
-# ── POST /ai/chat — public, no auth required ──────────────────────────────────
+# ── POST /ai/chat — public, optionally authenticated ──────────────────────────
 
 @router.post("/chat", response_model=ChatResponse, summary="Chat with TripWise AI")
-def chat(payload: ChatRequest):
-    """Chat with TripWise AI. No authentication required."""
+@limiter.limit("10/minute")
+def chat(
+    request: Request,
+    payload: ChatRequest,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional),
+):
+    """Chat with TripWise AI."""
     if not payload.message.strip():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Message cannot be empty")
     try:
-        reply = _ai.chat(payload.message)
-        return ChatResponse(reply=reply, trip_context_used=False)
+        if current_user:
+            reply, context_used = _ai.generate_response(db, payload.message, current_user, payload.trip_id)
+            return ChatResponse(reply=reply, trip_context_used=context_used)
+        else:
+            reply = _ai.chat(payload.message)
+            return ChatResponse(reply=reply, trip_context_used=False)
     except HTTPException:
         raise
     except RuntimeError as e:
@@ -65,7 +76,8 @@ def get_trip_history(
 # ── POST /ai/generate — PUBLIC (no auth needed for frontend form) ─────────────
 
 @router.post("/generate", response_model=ItineraryResponse, summary="Generate AI itinerary (public)")
-def generate_itinerary(payload: TripGenerationRequest):
+@limiter.limit("5/minute")
+def generate_itinerary(request: Request, payload: TripGenerationRequest):
     try:
         itinerary = _ai.generate_itinerary(
             source=payload.source, destination=payload.destination,
