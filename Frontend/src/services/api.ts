@@ -183,6 +183,7 @@ export async function removeFavorite(favoriteId: string) {
 
 const publicApi = axios.create({
   baseURL: BASE_URL,
+  timeout: 60000, // 60 seconds
   headers: { 'Content-Type': 'application/json' },
 });
 

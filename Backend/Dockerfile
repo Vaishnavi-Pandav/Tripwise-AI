@@ -7,7 +7,11 @@ RUN apt-get update && apt-get install -y \
     gcc libpq-dev curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Upgrade pip to avoid warnings and compatibility issues
+RUN pip install --upgrade pip --no-cache-dir
+
+# Install Python dependencies (suppress root user warning — expected in Docker)
+ENV PIP_ROOT_USER_ACTION=ignore
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
