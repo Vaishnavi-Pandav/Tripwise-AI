@@ -13,7 +13,8 @@ RUN pip install --upgrade pip --no-cache-dir
 # Install Python dependencies (suppress root user warning — expected in Docker)
 ENV PIP_ROOT_USER_ACTION=ignore
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir --force-reinstall google-generativeai==0.8.4
 
 # Copy application code
 COPY . .
