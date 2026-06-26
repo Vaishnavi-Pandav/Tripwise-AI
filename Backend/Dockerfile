@@ -14,7 +14,7 @@ RUN pip install --upgrade pip --no-cache-dir
 ENV PIP_ROOT_USER_ACTION=ignore
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir --force-reinstall google-generativeai==0.8.4
+    pip install --no-cache-dir --force-reinstall google-generativeai==0.8.4 google-genai==0.3.0
 
 # Copy application code
 COPY . .
