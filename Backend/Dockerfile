@@ -10,10 +10,7 @@ RUN pip install --upgrade pip --no-cache-dir
 ENV PIP_ROOT_USER_ACTION=ignore
 
 COPY requirements.txt .
-
-# Install all packages then force reinstall google-genai to fix namespace conflict
-RUN pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir --force-reinstall --no-deps google-genai==2.8.0
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
