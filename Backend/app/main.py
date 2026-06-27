@@ -3,8 +3,6 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
 
 import app.models  # noqa: F401
 from app.api import (
@@ -15,7 +13,6 @@ from app.api import (
 )
 from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
-from app.core.rate_limit import limiter
 from app.db.session import Base, engine
 from app.middleware.logging import RequestLoggingMiddleware
 
@@ -70,8 +67,6 @@ app.add_middleware(
     expose_headers=["*"],
 )
 app.add_middleware(RequestLoggingMiddleware)
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 register_exception_handlers(app)
 
 PREFIX = "/api/v1"
