@@ -67,6 +67,12 @@ app.add_middleware(
     expose_headers=["*"],
 )
 app.add_middleware(RequestLoggingMiddleware)
+# Rate limiter state (required for @limiter.limit decorators)
+from app.core.rate_limit import limiter
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 register_exception_handlers(app)
 
 PREFIX = "/api/v1"
