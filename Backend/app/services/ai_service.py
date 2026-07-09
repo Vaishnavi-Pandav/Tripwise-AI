@@ -391,6 +391,7 @@ class AIService:
         except Exception as e:
             logger.error(f"LLM error: {e}")
             self._handle_gemini_error(e)
+            raise  # unreachable
 
         # 6. Save to memory + DB
         _save_to_memory(str(user.id), message, reply)
@@ -417,10 +418,12 @@ class AIService:
         full_prompt = "\n\n".join(parts)
 
         try:
-            return self._llm.generate(BASE_SYSTEM_PROMPT, full_prompt, max_tokens=1000)
+            reply = self._llm.generate(BASE_SYSTEM_PROMPT, full_prompt, max_tokens=1000)
+            return reply
         except Exception as e:
             logger.error(f"LLM chat error: {e}")
             self._handle_gemini_error(e)
+            raise  # unreachable — _handle_gemini_error always raises
 
     # ── Itinerary generation ──────────────────────────────────────────────────
 
@@ -443,14 +446,16 @@ class AIService:
             "## 💡 Travel Tips"
         )
         try:
-            return self._llm.generate(
+            result = self._llm.generate(
                 "You are a travel planning expert. Respond in well-structured Markdown. Use ₹ INR for all costs.",
                 prompt,
                 max_tokens=3000,
             )
+            return result
         except Exception as e:
             logger.error(f"Itinerary generation error: {e}")
             self._handle_gemini_error(e)
+            raise  # unreachable
 
     # ── Trip context helpers ──────────────────────────────────────────────────
 
