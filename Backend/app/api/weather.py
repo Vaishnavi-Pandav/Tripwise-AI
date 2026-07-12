@@ -1,24 +1,25 @@
 import logging
+from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.core.dependencies import get_current_user
 from app.db.session import get_db
-from app.models.user import User
 from app.schemas.weather import ForecastResponse, TravelAdvisoryResponse, WeatherResponse
 from app.services.weather_service import WeatherService
+from app.core.dependencies import get_current_user
+from app.models.user import User
 
 logger = logging.getLogger("tripwise")
 router = APIRouter(prefix="/weather", tags=["Weather"])
 _svc   = WeatherService()
 
 
-# ── GET /weather/{city} ────────────────────────────────────────────────────────
+# ── GET /weather/{city} — PUBLIC (no auth needed) ─────────────────────────────
 
 @router.get(
     "/{city}",
     response_model=WeatherResponse,
-    summary="Get current weather for a city",
+    summary="Get current weather for a city (public)",
     description="""
 Returns current weather data for any city.
 
@@ -44,18 +45,17 @@ Returns current weather data for any city.
 def get_current_weather(
     city: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
     return _svc.get_current_weather(db, city)
 
 
-# ── GET /weather/forecast/{city} ──────────────────────────────────────────────
+# ── GET /weather/forecast/{city} — PUBLIC ─────────────────────────────────────
 # NOTE: Must be registered BEFORE /{city} to avoid route conflict
 
 @router.get(
     "/forecast/{city}",
     response_model=ForecastResponse,
-    summary="Get 7-day weather forecast for a city",
+    summary="Get 7-day weather forecast for a city (public)",
     description="""
 Returns a day-by-day weather forecast (up to 7 days).
 
@@ -68,9 +68,8 @@ Uses OpenWeatherMap 5-day / 3-hour forecast API, aggregated to daily.
 )
 def get_forecast(
     city: str,
-    days: int = Query(7, ge=1, le=7, description="Number of forecast days (1–7)"),
+    days: int = Query(7, ge=1, le=7),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
     return _svc.get_forecast(db, city, days)
 

@@ -40,7 +40,8 @@ def chat(
             reply, context_used = _ai.generate_response(db, payload.message, current_user, payload.trip_id)
             return ChatResponse(reply=reply, trip_context_used=context_used)
         else:
-            reply = _ai.chat(payload.message)
+            # Pass db so RAG + tools work for unauthenticated users too
+            reply = _ai.chat(payload.message, db=db)
             return ChatResponse(reply=reply, trip_context_used=False)
     except HTTPException:
         raise
@@ -88,6 +89,24 @@ def generate_itinerary(request: Request, payload: TripGenerationRequest):
         raise
     except RuntimeError as e:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(e))
+
+
+# ── DELETE /ai/memory — clear conversation memory ─────────────────────────────
+
+@router.delete("/memory", summary="Clear conversation memory")
+def clear_memory(current_user: User = Depends(get_current_user)):
+    """Clear the in-memory conversation history for the current user."""
+    AIService.clear_memory(str(current_user.id))
+    return {"message": "Conversation memory cleared."}
+
+
+# ── GET /ai/memory — preview current memory ────────────────────────────────────
+
+@router.get("/memory", summary="Preview conversation memory")
+def get_memory(current_user: User = Depends(get_current_user)):
+    """Return the current in-memory conversation history (last 5 exchanges)."""
+    history = AIService.get_memory_preview(str(current_user.id))
+    return {"memory": history, "count": len(history)}
 
 
 # ── GET /ai/context/{trip_id} ─────────────────────────────────────────────────

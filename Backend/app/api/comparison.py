@@ -1,9 +1,11 @@
 import logging
-from fastapi import APIRouter, Depends
+from typing import Optional
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_current_user
 from app.db.session import get_db
+from app.models.destination import Destination
 from app.models.user import User
 from app.schemas.comparison import (
     CompareOut,
@@ -16,6 +18,45 @@ from app.services.comparison_service import ComparisonService
 logger = logging.getLogger("tripwise")
 router = APIRouter(tags=["Destination Comparison"])
 _svc   = ComparisonService()
+
+
+# ── GET /destinations/ — PUBLIC listing ───────────────────────────────────────
+
+@router.get("/destinations/", summary="List destinations (public)")
+def list_destinations(
+    search:   Optional[str] = Query(None, description="Search by city name"),
+    country:  Optional[str] = Query(None),
+    limit:    int           = Query(20, ge=1, le=100),
+    offset:   int           = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    q = db.query(Destination)
+    if search:
+        q = q.filter(Destination.city_name.ilike(f"%{search}%"))
+    if country:
+        q = q.filter(Destination.country.ilike(f"%{country}%"))
+    total = q.count()
+    items = q.order_by(Destination.city_name).offset(offset).limit(limit).all()
+    return {
+        "total": total,
+        "destinations": [
+            {
+                "id":          str(d.id),
+                "city_name":   d.city_name,
+                "state":       d.state,
+                "country":     d.country,
+                "description": d.description,
+                "best_season": d.best_season,
+                "known_for":   d.known_for,
+                "image_url":   d.image_url,
+                "overall_score": d.overall_score(),
+                "safety_score":  d.safety_score,
+                "food_score":    d.food_score,
+                "adventure_score": d.adventure_score,
+            }
+            for d in items
+        ],
+    }
 
 
 # ── POST /destinations/compare ────────────────────────────────────────────────
