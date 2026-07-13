@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Settings, LogOut,
-  ChevronRight, Plane, Star, BarChart2,
+  ChevronRight, Plane, Star, BarChart2, BookOpen,
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -12,7 +12,7 @@ import { useAuth } from '../context/AuthContext';
 
 const Profile = () => {
   const [darkMode,   setDarkMode]   = useState(true);
-  const [activeTab,  setActiveTab]  = useState<'dashboard'|'settings'>('dashboard');
+  const [activeTab,  setActiveTab]  = useState<'dashboard'|'blog'|'settings'>('dashboard');
   const { user, logout }            = useAuth();
   const navigate                    = useNavigate();
 
@@ -27,6 +27,7 @@ const Profile = () => {
 
   const navItems = [
     { key: 'dashboard', icon: BarChart2, label: 'My Dashboard' },
+    { key: 'blog',      icon: BookOpen,  label: 'Travel Blog' },
     { key: 'settings',  icon: Settings,  label: 'Account Settings' },
   ] as const;
 
@@ -105,6 +106,23 @@ const Profile = () => {
               </motion.div>
             )}
 
+            {/* Blog tab */}
+            {activeTab === 'blog' && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                <h2 className="text-2xl font-playfair font-bold mb-6">Travel Blog</h2>
+                <div className="p-6 rounded-2xl border bg-white/5 border-white/10 text-center">
+                  <BookOpen size={40} className="text-emerald-400 mx-auto mb-4 opacity-60" />
+                  <p className="text-white/70 font-medium mb-2">Share your travel experiences</p>
+                  <p className="text-white/40 text-sm mb-6">Write posts, tips, and stories from your adventures — visible in your dashboard</p>
+                  <Link to="/dashboard">
+                    <button className="px-6 py-2.5 rounded-xl text-white text-sm font-medium"
+                      style={{ background: 'linear-gradient(135deg,#10b981,#0ea5e9)' }}>
+                      Open Blog in Dashboard →
+                    </button>
+                  </Link>
+                </div>
+              </motion.div>
+            )}
 
             {/* Settings tab */}
             {activeTab === 'settings' && (

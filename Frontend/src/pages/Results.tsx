@@ -443,7 +443,7 @@ const Results = () => {
                 transition={{ duration: 0.5 }}
               >
                 {/* Result header */}
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg flex items-center justify-center"
                       style={{ background: 'linear-gradient(135deg, #10b981, #0ea5e9)' }}>
@@ -451,7 +451,7 @@ const Results = () => {
                     </div>
                     <span className="text-white font-semibold">Your AI Itinerary</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       onClick={() => setShowRouteMap(true)}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-white/70 hover:text-white transition-colors"
@@ -460,7 +460,7 @@ const Results = () => {
                     </button>
                     <span className="text-xs text-white/40 px-3 py-1 rounded-full"
                       style={{ background: 'rgba(255,255,255,0.05)' }}>
-                      {form.destination} · {form.days} days · {form.travelers} traveler{parseInt(form.travelers) > 1 ? 's' : ''}
+                      {form.destination} · {form.days}d · {form.travelers}p
                     </span>
                   </div>
                 </div>
