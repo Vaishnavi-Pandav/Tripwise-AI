@@ -248,7 +248,7 @@ export default function Chat() {
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ask anything about travel... (Enter to send, Shift+Enter for new line)"
+                  placeholder="Ask anything about travel…"
                   rows={1}
                   className={`w-full resize-none rounded-2xl px-4 py-3 text-sm outline-none transition-all pr-4 ${darkMode?'text-white placeholder:text-white/30':'text-gray-900 placeholder:text-gray-400'}`}
                   style={{

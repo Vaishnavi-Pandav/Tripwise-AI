@@ -430,3 +430,66 @@
   letter-spacing: 0.08em;
   margin-bottom: 6px;
 }
+
+/* ── Mobile responsive improvements ─────────────────────────────────────── */
+@media (max-width: 640px) {
+  .container-custom {
+    padding: 0 16px;
+  }
+  .section-padding {
+    padding: 60px 0;
+  }
+  .btn-primary {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+  .stat-number {
+    font-size: clamp(28px, 8vw, 48px);
+  }
+}
+
+/* Horizontal scroll tab bar — hide scrollbar */
+.tab-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.tab-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Touch devices: disable hover transforms that feel wrong on tap */
+@media (hover: none) {
+  .glass-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  .package-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  .btn-primary:hover {
+    transform: none;
+  }
+}
+
+/* Safe area padding for iOS notch/home indicator */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Line clamp utilities */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
