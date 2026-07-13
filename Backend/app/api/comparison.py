@@ -24,12 +24,14 @@ _svc   = ComparisonService()
 
 @router.get("/destinations/", summary="List destinations (public)")
 def list_destinations(
-    search:   Optional[str] = Query(None, description="Search by city name"),
+    search:   Optional[str] = Query(None),
     country:  Optional[str] = Query(None),
     limit:    int           = Query(20, ge=1, le=100),
     offset:   int           = Query(0, ge=0),
-    db: Session = Depends(get_db),
+    db: Optional[Session] = Depends(get_db),
 ):
+    if db is None:
+        return {"total": 0, "destinations": [], "note": "Database temporarily unavailable"}
     q = db.query(Destination)
     if search:
         q = q.filter(Destination.city_name.ilike(f"%{search}%"))
@@ -41,14 +43,14 @@ def list_destinations(
         "total": total,
         "destinations": [
             {
-                "id":          str(d.id),
-                "city_name":   d.city_name,
-                "state":       d.state,
-                "country":     d.country,
-                "description": d.description,
-                "best_season": d.best_season,
-                "known_for":   d.known_for,
-                "image_url":   d.image_url,
+                "id":            str(d.id),
+                "city_name":     d.city_name,
+                "state":         d.state,
+                "country":       d.country,
+                "description":   d.description,
+                "best_season":   d.best_season,
+                "known_for":     d.known_for,
+                "image_url":     d.image_url,
                 "overall_score": d.overall_score(),
                 "safety_score":  d.safety_score,
                 "food_score":    d.food_score,

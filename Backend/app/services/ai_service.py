@@ -240,6 +240,7 @@ def _build_rag_and_tool_context(db: Optional[Session], message: str) -> str:
     """
     Detect intent in the user message and gather relevant context via RAG and tools.
     Returns a formatted string to inject into the LLM prompt.
+    Safely returns empty string if db is None (DB unavailable).
     """
     if db is None:
         return ""

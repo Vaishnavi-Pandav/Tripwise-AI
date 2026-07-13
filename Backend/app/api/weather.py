@@ -44,9 +44,9 @@ Returns current weather data for any city.
 )
 def get_current_weather(
     city: str,
-    db: Session = Depends(get_db),
+    db: Optional[Session] = Depends(get_db),
 ):
-    return _svc.get_current_weather(db, city)
+    return _svc.get_current_weather(db, city)  # service handles db=None gracefully
 
 
 # ── GET /weather/forecast/{city} — PUBLIC ─────────────────────────────────────
@@ -69,7 +69,7 @@ Uses OpenWeatherMap 5-day / 3-hour forecast API, aggregated to daily.
 def get_forecast(
     city: str,
     days: int = Query(7, ge=1, le=7),
-    db: Session = Depends(get_db),
+    db: Optional[Session] = Depends(get_db),
 ):
     return _svc.get_forecast(db, city, days)
 

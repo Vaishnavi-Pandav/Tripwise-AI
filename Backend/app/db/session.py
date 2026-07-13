@@ -29,8 +29,22 @@ Base = declarative_base()
 
 
 def get_db():
-    db = SessionLocal()
+    """
+    Yield a DB session. If the connection fails, yields None so
+    endpoints can decide whether to fail hard or fall back gracefully.
+    """
+    db = None
     try:
+        db = SessionLocal()
+        # Test the connection is alive before yielding
+        db.execute(text("SELECT 1"))
         yield db
+    except Exception:
+        # DB unreachable — yield None so callers can handle it
+        yield None
     finally:
-        db.close()
+        if db is not None:
+            try:
+                db.close()
+            except Exception:
+                pass

@@ -29,19 +29,29 @@ _ai = AIService()
 def chat(
     request: Request,
     payload: ChatRequest,
-    db: Session = Depends(get_db),
+    db: Optional[Session] = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user_optional),
 ):
-    """Chat with TripWise AI."""
+    """Chat with TripWise AI. Works even if DB is temporarily unavailable."""
     if not payload.message.strip():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Message cannot be empty")
     try:
         if current_user:
-            reply, context_used = _ai.generate_response(db, payload.message, current_user, payload.trip_id)
+            try:
+                reply, context_used = _ai.generate_response(db, payload.message, current_user, payload.trip_id)
+            except Exception as db_err:
+                # DB issue — fallback to basic chat without context/memory save
+                logger.warning(f"DB error in authenticated chat, falling back: {db_err}")
+                reply = _ai.chat(payload.message, db=None)
+                context_used = False
             return ChatResponse(reply=reply, trip_context_used=context_used)
         else:
-            # Pass db so RAG + tools work for unauthenticated users too
-            reply = _ai.chat(payload.message, db=db)
+            # Try with DB for RAG, fall back to no-DB if connection fails
+            try:
+                reply = _ai.chat(payload.message, db=db)
+            except Exception as db_err:
+                logger.warning(f"DB error in public chat, falling back: {db_err}")
+                reply = _ai.chat(payload.message, db=None)
             return ChatResponse(reply=reply, trip_context_used=False)
     except HTTPException:
         raise

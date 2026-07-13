@@ -81,25 +81,47 @@ class WeatherService:
 
     # ── Public API ─────────────────────────────────────────────────────────────
 
-    def get_current_weather(self, db: Session, city: str) -> WeatherResponse:
+    def get_current_weather(self, db: Optional[Session], city: str) -> WeatherResponse:
         """
         Fetch current weather for a city.
         Checks cache first (TTL = 3 hours). Falls back to OWM API.
         Returns placeholder if API key not configured.
+        If db is None (DB unavailable), skips cache and goes direct to API.
         """
-        today   = date.today()
-        cached  = self._get_from_cache(db, city, today)
+        today = date.today()
 
-        if cached and self._is_fresh(cached):
-            return self._cache_to_response(cached, "cache")
+        # Only use cache if DB is available
+        if db is not None:
+            cached = self._get_from_cache(db, city, today)
+            if cached and self._is_fresh(cached):
+                return self._cache_to_response(cached, "cache")
+        else:
+            cached = None
 
         if not settings.WEATHER_API_KEY:
             return self._unavailable_response(city, today)
 
         try:
             data = self._fetch_current(city)
-            cached = self.cache_weather(db, city, data, today)
-            return self._cache_to_response(cached, "live")
+            if db is not None:
+                cached = self.cache_weather(db, city, data, today)
+                return self._cache_to_response(cached, "live")
+            else:
+                # No DB — return response directly without caching
+                rule = self._match_rule(data.get("condition"), data.get("temperature"))
+                return WeatherResponse(
+                    city=city,
+                    temperature=data.get("temperature"),
+                    feels_like=data.get("feels_like"),
+                    humidity=data.get("humidity"),
+                    wind_speed=data.get("wind_speed"),
+                    weather_condition=data.get("condition"),
+                    weather_icon=data.get("icon"),
+                    rain_probability=data.get("rain_prob"),
+                    forecast_date=today,
+                    travel_recommendation=rule["advice"],
+                    source="live",
+                )
         except HTTPException:
             raise
         except Exception as e:
@@ -108,7 +130,7 @@ class WeatherService:
                 return self._cache_to_response(cached, "cache")
             return self._unavailable_response(city, today)
 
-    def get_forecast(self, db: Session, city: str, days: int = 7) -> ForecastResponse:
+    def get_forecast(self, db: Optional[Session], city: str, days: int = 7) -> ForecastResponse:
         """
         Return up to 7-day forecast. Uses OWM free tier (5-day / 3-hour).
         Aggregates to daily if live; uses cache if available.
@@ -119,17 +141,18 @@ class WeatherService:
         try:
             raw = self._fetch_forecast(city)
             forecast_days = self._aggregate_daily(raw, days)
-            # Cache each day
-            for fd in forecast_days:
-                self.cache_weather(db, city, {
-                    "temperature": fd.temperature_max,
-                    "feels_like":  fd.temperature_max,
-                    "humidity":    fd.humidity,
-                    "wind_speed":  fd.wind_speed,
-                    "condition":   fd.weather_condition,
-                    "icon":        fd.weather_icon,
-                    "rain_prob":   fd.rain_probability,
-                }, fd.forecast_date)
+            # Cache each day only if DB is available
+            if db is not None:
+                for fd in forecast_days:
+                    self.cache_weather(db, city, {
+                        "temperature": fd.temperature_max,
+                        "feels_like":  fd.temperature_max,
+                        "humidity":    fd.humidity,
+                        "wind_speed":  fd.wind_speed,
+                        "condition":   fd.weather_condition,
+                        "icon":        fd.weather_icon,
+                        "rain_prob":   fd.rain_probability,
+                    }, fd.forecast_date)
 
             best  = [f.forecast_date for f in forecast_days if self._is_good_day(f)]
             avoid = [f.forecast_date for f in forecast_days if self._is_bad_day(f)]

@@ -79,12 +79,16 @@ export default function Chat() {
       const aiMsg: Message = { id: (Date.now()+1).toString(), role: 'assistant', content: res.reply, timestamp: new Date() };
       setMessages(prev => [...prev, aiMsg]);
     } catch (e: unknown) {
-      let errMsg = "Sorry, couldn't connect to AI service.";
+      let errMsg = "Sorry, I couldn't reach the AI service. Please try again in a moment.";
       if (e instanceof Error) {
-        if (e.message.includes('429')) errMsg = "AI rate limit reached. Please wait a moment and try again.";
-        else if (e.message.includes('502')) errMsg = "AI service error. Please try again.";
-        else if (e.message.includes('Network')) errMsg = "Backend not reachable. Make sure it runs on port 8000.";
-        else errMsg = `Error: ${e.message}`;
+        if (e.message.includes('429') || e.message.includes('rate'))
+          errMsg = "Too many requests — please wait a few seconds and try again.";
+        else if (e.message.includes('502') || e.message.includes('503'))
+          errMsg = "AI service is temporarily unavailable. Please try again shortly.";
+        else if (e.message.includes('Network') || e.message.includes('ERR_NETWORK'))
+          errMsg = "Network error — please check your connection and try again.";
+        else if (e.message.includes('timeout') || e.message.includes('ECONNABORTED'))
+          errMsg = "Request timed out — the AI is taking too long. Please try again.";
       }
       setMessages(prev => [...prev, { id: (Date.now()+1).toString(), role: 'assistant', content: errMsg, timestamp: new Date() }]);
     } finally {
